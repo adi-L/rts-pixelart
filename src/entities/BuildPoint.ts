@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import EventBus from '../events/EventBus';
 import {
-  BUILD_POINT_DETECT_RADIUS, COLOR_ACCENT, GROUND_Y, COIN_SIZE,
+  BUILD_POINT_DETECT_RADIUS, COLOR_ACCENT, GROUND_Y,
   BUILD_POINT_FADE_IN, WALL_WOOD_COST, WALL_STONE_UPGRADE_COST,
   TOWER_COST, FARM_COST, BUILDER_HUT_COST, BASE_UPGRADE_COST_1,
   BASE_UPGRADE_COST_2, BASE_UPGRADE_COST_3,
@@ -43,7 +43,6 @@ export class BuildPoint {
   private flagBanner: Phaser.GameObjects.Rectangle;
   private coinText: Phaser.GameObjects.Text;
   private bannerPulseTween: Phaser.Tweens.Tween;
-  private groundCoins: Phaser.GameObjects.Arc[] = [];
 
   constructor(scene: Phaser.Scene, config: BuildPointConfig) {
     this.scene = scene;
@@ -102,7 +101,7 @@ export class BuildPoint {
   }
 
   private getCoinLabel(): string {
-    return `${this.coinsDeposited}/${this.cost}`;
+    return `cost: ${this.cost}`;
   }
 
   private refreshCoinText(): void {
@@ -188,40 +187,21 @@ export class BuildPoint {
   }
 
   /**
-   * Deposit a coin at this build point.
-   * Spawns a visible coin on the ground near the flag.
+   * Fund this build point with the full cost at once (all-or-nothing).
+   * Called by Game.ts after verifying the hero can afford it.
    * Emits coin:deposited on the EventBus.
    */
-  addCoin(): number {
+  fundFull(amount: number): void {
     if (this.state === BuildPointState.Locked || this.state === BuildPointState.Building) {
-      return this.coinsDeposited;
+      return;
     }
-    this.coinsDeposited++;
+    this.coinsDeposited += amount;
     this.refreshCoinText();
-
-    // Spawn a visible coin on the ground near the flag pole
-    const spread = (this.groundCoins.length - (this.cost - 1) / 2) * (COIN_SIZE + 2);
-    const coinX = this.x + spread;
-    const coinY = GROUND_Y - COIN_SIZE / 2 - 2;
-    const gc = this.scene.add.circle(coinX, coinY, COIN_SIZE * 0.5, COLOR_ACCENT)
-      .setAlpha(0.9)
-      .setDepth(4);
-    this.groundCoins.push(gc);
-
     EventBus.emit('coin:deposited', {
       buildPointId: this.id,
       total: this.coinsDeposited,
       type: this.type,
     });
-    return this.coinsDeposited;
-  }
-
-  /** Remove all visual ground coins (called when funded or hidden) */
-  private clearGroundCoins(): void {
-    for (const gc of this.groundCoins) {
-      gc.destroy();
-    }
-    this.groundCoins.length = 0;
   }
 
   /** Hide flag when structure is built */
@@ -231,7 +211,6 @@ export class BuildPoint {
     this.flagPole.setVisible(false);
     this.flagBanner.setVisible(false);
     this.coinText.setVisible(false);
-    this.clearGroundCoins();
   }
 
   /** Show flag again for upgradeable state */
@@ -255,7 +234,6 @@ export class BuildPoint {
     this.flagPole.destroy();
     this.flagBanner.destroy();
     this.coinText.destroy();
-    this.clearGroundCoins();
   }
 }
 

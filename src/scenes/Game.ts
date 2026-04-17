@@ -146,7 +146,7 @@ export class Game extends Scene {
       // If tryRecruitNearby returned false (0 coins), fall through to red flash below
     }
 
-    // Priority 2: Deposit coin at nearby build point
+    // Priority 2: Pay full cost at nearby build point (all-or-nothing)
     const nearBp = this.structureManager.buildPoints.find(
       bp => Math.abs(heroX - bp.x) <= BUILD_POINT_DETECT_RADIUS &&
             bp.state !== BuildPointState.Locked &&
@@ -154,53 +154,56 @@ export class Game extends Scene {
             bp.state !== BuildPointState.Complete
     );
     if (nearBp) {
-      if (this.economy.spendCoins(1)) {
-        nearBp.addCoin();
-        // Visual: coin flies from hero to build point
-        const flyCoin = this.add.circle(
-          this.hero.sprite.x, this.hero.sprite.y,
-          COIN_SIZE, COLOR_ACCENT
-        ).setDepth(10);
-        this.tweens.add({
-          targets: flyCoin,
-          x: nearBp.x,
-          y: nearBp.marker.y,
-          scaleX: 0.5, scaleY: 0.5,
-          duration: COIN_DROP_BOUNCE_DURATION,
-          ease: 'Quad.easeIn',
-          onComplete: () => {
-            flyCoin.destroy();
-            this.tweens.add({
-              targets: nearBp.marker,
-              scaleX: 1.3, scaleY: 1.3,
-              duration: COIN_DROP_BOUNCE_DURATION / 2,
-              yoyo: true,
-            });
-          },
-        });
+      const cost = nearBp.cost;
+      if (this.economy.coins >= cost) {
+        // Can afford — spend all coins and fund immediately
+        this.economy.spendCoins(cost);
+        nearBp.fundFull(cost);
+        // Visual: coins fly from hero to flag
+        for (let i = 0; i < cost; i++) {
+          const flyCoin = this.add.circle(
+            this.hero.sprite.x, this.hero.sprite.y,
+            COIN_SIZE * 0.5, COLOR_ACCENT
+          ).setDepth(10);
+          this.tweens.add({
+            targets: flyCoin,
+            x: nearBp.x + (i - cost / 2) * 6,
+            y: GROUND_Y - 20,
+            scaleX: 0.5, scaleY: 0.5,
+            duration: COIN_DROP_BOUNCE_DURATION + i * 50,
+            ease: 'Quad.easeIn',
+            onComplete: () => flyCoin.destroy(),
+          });
+        }
+        return;
+      } else {
+        // Can't afford — coins fall to ground, red flash
+        this.hero.sprite.setTint(0xff0000);
+        this.time.delayedCall(100, () => this.hero.sprite.clearTint());
+        const coinCount = Math.max(1, this.economy.coins || 1);
+        for (let i = 0; i < coinCount; i++) {
+          const fallCoin = this.add.circle(
+            heroX + (i - coinCount / 2) * 8,
+            this.hero.sprite.y - 10,
+            COIN_SIZE * 0.5, 0x888888
+          ).setAlpha(0.6).setDepth(10);
+          this.tweens.add({
+            targets: fallCoin,
+            y: GROUND_Y - COIN_SIZE,
+            alpha: 0,
+            duration: 300 + i * 60,
+            ease: 'Bounce.easeOut',
+            onComplete: () => fallCoin.destroy(),
+          });
+        }
         return;
       }
     }
 
-    // No valid target or 0 coins: coin falls to ground
-    if (this.economy.coins === 0 && (hasNearbyVagrant || nearBp)) {
+    // No valid target nearby and 0 coins: red flash
+    if (this.economy.coins === 0 && hasNearbyVagrant) {
       this.hero.sprite.setTint(0xff0000);
-      this.time.delayedCall(100, () => {
-        this.hero.sprite.clearTint();
-      });
-      // Animate an empty coin falling from hero to ground
-      const fallCoin = this.add.circle(
-        heroX, this.hero.sprite.y - 10,
-        COIN_SIZE * 0.7, 0x888888
-      ).setAlpha(0.6).setDepth(10);
-      this.tweens.add({
-        targets: fallCoin,
-        y: GROUND_Y - COIN_SIZE,
-        alpha: 0,
-        duration: 400,
-        ease: 'Bounce.easeOut',
-        onComplete: () => fallCoin.destroy(),
-      });
+      this.time.delayedCall(100, () => this.hero.sprite.clearTint());
     }
   }
 
