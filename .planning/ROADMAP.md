@@ -31,7 +31,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. Scene shuts down cleanly with no lingering listeners or physics bodies
 **Plans**: 3 plans
 Plans:
-- [ ] 01-01-PLAN.md -- Infrastructure cleanup, constants, EventBus, scene chain, Arcade Physics
+- [x] 01-01-PLAN.md -- Infrastructure cleanup, constants, EventBus, scene chain, Arcade Physics
 - [ ] 01-02-PLAN.md -- Hero entity, parallax world, camera follow, clean shutdown
 - [ ] 01-03-PLAN.md -- Coin pool, build points, collection/drop mechanic, visual checkpoint
 
