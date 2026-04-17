@@ -10,7 +10,7 @@ Phase 3 introduces the survival loop: a day/night cycle with visual tint transit
 
 The existing codebase provides strong foundations. `BaseNPC` can be extended for both Zombie and Archer entities. `BaseStructure.takeDamage()` already handles HP reduction with visual feedback. `EconomyManager.setDay()` already tracks day number. The coin pool pattern (`Coin.ts`) provides a template for zombie and arrow object pools. All new systems coordinate through `EventBus` events (`night:start`, `night:end`, `day:start`).
 
-**Primary recommendation:** Build three new systems (DayNightCycleManager, WaveManager, and Archer entity) that integrate through EventBus events. The day/night overlay is a single full-screen Rectangle with alpha-tweened transitions. Zombies are pooled via `Phaser.Physics.Arcade.Group`. Archer arrows are pooled similarly. All combat uses `physics.add.overlap` between zombie group and structure/NPC groups.
+**Primary recommendation:** Build three new systems (DayNightCycleManager, WaveManager, and Archer entity) that integrate through EventBus events. The day/night overlay is a single full-screen Rectangle with alpha-tweened transitions. Zombies are pooled via `Phaser.Physics.Arcade.Group`. Archer arrows are pooled similarly. Arrow-zombie combat uses `physics.add.overlap` between arrow pool and zombie pool (both are physics groups). Zombie-structure and zombie-NPC collisions use distance checks in `WaveManager.update()` since structures lack physics bodies.
 
 <user_constraints>
 ## User Constraints (from CONTEXT.md)
@@ -123,8 +123,8 @@ No additional libraries needed. All Phase 3 features use built-in Phaser 3 capab
               +---------+---------+
               |                   |
               v                   v
-         Structure overlap    NPC overlap
-         takeDamage()         kill NPC
+         Structure distance   NPC distance
+         check -> takeDamage  check -> kill NPC
 ```
 
 ### Recommended Project Structure
@@ -241,8 +241,8 @@ class WaveManager {
 }
 ```
 
-### Pattern 3: Zombie AI (March + Attack)
-**What:** Each active zombie marches toward the nearest structure. On overlap, it stops and attacks on a timer.
+### Pattern 3: Zombie AI (March + Attack via Distance Checks)
+**What:** Each active zombie marches toward the nearest structure. When within contact distance, it stops and attacks on a timer. Uses distance checks in WaveManager.update() because structures lack physics bodies.
 **When to use:** Called in WaveManager.update() for each active zombie.
 **Example:**
 ```typescript
@@ -250,15 +250,34 @@ class WaveManager {
 enum ZombieState { March, Attack, Dying }
 
 // Per-zombie data stored in zombie.getData / setData
-updateZombie(zombie: GameObjects.Rectangle, structures: BaseStructure[]): void {
+updateZombie(zombie: GameObjects.Rectangle, structures: BaseStructure[], time: number): void {
   const state = zombie.getData('state') as ZombieState;
   if (state === ZombieState.Dying) return;
-  if (state === ZombieState.Attack) {
-    // Attack timer handled by TimerEvent set when entering Attack state
+
+  // Check structure contact via distance (structures have no physics bodies)
+  const nearest = this.findNearestStructure(zombie.x);
+  if (nearest && Math.abs(zombie.x - nearest.x) < ZOMBIE_CONTACT_DISTANCE) {
+    zombie.body.setVelocityX(0);
+    zombie.setData('state', ZombieState.Attack);
+    zombie.setData('targetStructure', nearest);
+    // Cooldown-based attack
+    const last = zombie.getData('lastAttack') || 0;
+    if (time - last >= ZOMBIE_ATTACK_INTERVAL) {
+      zombie.setData('lastAttack', time);
+      nearest.takeDamage(ZOMBIE_DAMAGE);
+      if (nearest.isDestroyed) {
+        zombie.setData('state', ZombieState.March);
+      }
+    }
     return;
   }
+
+  if (state === ZombieState.Attack) {
+    // Structure was destroyed or moved out of range, resume marching
+    zombie.setData('state', ZombieState.March);
+  }
+
   // March state: move toward nearest structure
-  const nearest = this.findNearestStructure(zombie.x, structures);
   if (!nearest) return;
   const dx = nearest.x - zombie.x;
   zombie.body.setVelocityX(dx > 0 ? ZOMBIE_SPEED : -ZOMBIE_SPEED);
@@ -311,7 +330,7 @@ class Archer extends BaseNPC {
 | Object pooling | Custom array pool | `Phaser.Physics.Arcade.Group` with `maxSize` | Built-in activate/deactivate, physics integration, overlap detection [VERIFIED: Coin.ts pattern] |
 | Timed events | `setTimeout` / manual timer | `Phaser.Time.TimerEvent` via `scene.time.addEvent` | Respects scene pause, auto-cleanup on shutdown [VERIFIED: NPCManager respawn timer] |
 | Smooth alpha transition | Manual lerp in update | `scene.tweens.add({ targets, alpha, duration })` | Handles easing, completion callbacks, cancellation [VERIFIED: Context7 tween docs] |
-| Collision detection | Manual distance checks | `physics.add.overlap(group, group, callback)` | Broadphase optimization, handles group-to-group efficiently [VERIFIED: Game.ts coin overlap] |
+| Collision detection (group-to-group) | Manual distance checks | `physics.add.overlap(group, group, callback)` | Broadphase optimization, handles group-to-group efficiently [VERIFIED: Game.ts coin overlap]. Note: only applicable when BOTH sides are physics groups. Zombie-structure uses distance checks since structures lack physics bodies. |
 | Cross-system events | Direct method calls between systems | EventBus (Phaser.Events.EventEmitter) | Decoupled systems, established project pattern [VERIFIED: EventBus.ts] |
 
 **Key insight:** Every infrastructure piece needed for Phase 3 already exists in Phaser or in the project's established patterns. The work is integration and game logic, not infrastructure.
@@ -345,7 +364,7 @@ class Archer extends BaseNPC {
 ### Pitfall 5: Zombies Walking Through Structures
 **What goes wrong:** Zombies pass through walls and towers without stopping.
 **Why it happens:** Using `overlap` instead of `collider`, or not setting zombie velocity to 0 when entering Attack state.
-**How to avoid:** Use `physics.add.overlap` (not collider) for detection, but manually stop zombie movement in the callback. Walls don't need physics bodies for this -- the overlap between zombie body and structure rect position is sufficient.
+**How to avoid:** Use distance checks in WaveManager.update() to detect when a zombie is within contact range of a structure. Set velocity to 0 and switch to Attack state. Walls don't need physics bodies for this -- the distance check between zombie position and structure position is sufficient.
 **Warning signs:** Zombies reaching the base despite walls being present.
 
 ### Pitfall 6: Arrow Pool Not Deactivating on Miss
@@ -421,26 +440,21 @@ startNightSpawning(totalZombies: number): void {
 }
 ```
 
-### Zombie-Structure Overlap with Cooldown
+### Zombie-Structure Distance Check with Cooldown
 ```typescript
-// [VERIFIED: physics.add.overlap pattern from Game.ts]
-this.physics.add.overlap(
-  zombiePool,
-  structureGroup, // or iterate structures manually
-  (zombieObj, structureObj) => {
-    const zombie = zombieObj as Phaser.GameObjects.Rectangle;
-    if (!zombie.active) return;
-    const now = this.time.now;
-    const lastAttack = zombie.getData('lastAttack') || 0;
-    if (now - lastAttack < ZOMBIE_ATTACK_INTERVAL) return;
+// [VERIFIED: distance-check approach chosen because structures lack physics bodies]
+// Inside WaveManager.update(), for each active zombie:
+const nearest = this.findNearestStructure(zombie.x);
+if (nearest && Math.abs(zombie.x - nearest.x) < ZOMBIE_CONTACT_DISTANCE) {
+  (zombie.body as Phaser.Physics.Arcade.Body).setVelocityX(0);
+  zombie.setData('state', ZombieState.Attack);
+  const now = this.scene.time.now;
+  const lastAttack = zombie.getData('lastAttack') || 0;
+  if (now - lastAttack >= ZOMBIE_ATTACK_INTERVAL) {
     zombie.setData('lastAttack', now);
-    zombie.body.setVelocity(0, 0); // stop marching
-    zombie.setData('state', ZombieState.Attack);
-    // Find corresponding structure and deal damage
-    const structure = this.findStructureByRect(structureObj);
-    if (structure) structure.takeDamage(ZOMBIE_DAMAGE);
+    nearest.takeDamage(ZOMBIE_DAMAGE);
   }
-);
+}
 ```
 
 ### Arrow Firing from Tower
@@ -480,6 +494,7 @@ These values balance against the existing game constants and the 10-min day / 8-
 | `ZOMBIE_BASE_COUNT` | 4 | Per D-16, ~3-4 on night 1 [LOCKED] |
 | `ZOMBIE_GROWTH_PER_NIGHT` | 2 | Per D-16, add 2-3 per night [LOCKED] |
 | `ZOMBIE_POOL_SIZE` | 40 | Handles up to night 19 (40 zombies). Covers MVP gameplay. [ASSUMED] |
+| `ZOMBIE_CONTACT_DISTANCE` | 20 | Distance in px at which zombie stops and attacks a structure. Half of NPC_WIDTH. [ASSUMED] |
 | `ARCHER_RANGE` | 300 | ~300px detection range from tower. Covers area between tower and nearest wall. [ASSUMED] |
 | `ARCHER_FIRE_RATE` | 1500 | 1 arrow per 1.5 seconds. Meaningful DPS without being instant-kill. [ASSUMED] |
 | `ARROW_DAMAGE` | 10 | 3 hits to kill a zombie (30 HP). Archer can kill ~1 zombie per 4.5s. [ASSUMED] |
@@ -518,22 +533,25 @@ These values balance against the existing game constants and the 10-min day / 8-
 | A6 | Pre-creating rectangle GameObjects in zombie pool works with Arcade Physics Group | Code Examples | May need to use Sprite with generated texture instead of Rectangle if Group doesn't support Rectangle well. Low risk -- fallback is straightforward. |
 | A7 | Archer hunt coin generation at 15s interval balances vs farm income (8s per coin) | Recommended Constants | Could make archers too economically powerful or useless. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Structure physics bodies for overlap detection**
+1. **Structure physics bodies for overlap detection (RESOLVED)**
    - What we know: Structures are `Phaser.GameObjects.Rectangle` without physics bodies currently. Zombies need overlap detection with them.
    - What's unclear: Whether to add physics bodies to structures or use manual distance checks.
    - Recommendation: Add static physics bodies to structures (walls, towers, base) for `physics.add.overlap()`. Static bodies have zero physics cost. Alternatively, manual distance check in zombie update is simpler but less performant with many zombies.
+   - **Resolution:** Use distance checks in `WaveManager.update()`. Structures lack physics bodies and adding them would require modifying BaseStructure (out of scope for Phase 3). With <40 zombies and <10 structures, the O(n*m) distance check per frame is negligible. Arrow-zombie overlap uses `physics.add.overlap` since both are physics groups.
 
-2. **Zombie pool implementation with Rectangles vs Sprites**
+2. **Zombie pool implementation with Rectangles vs Sprites (RESOLVED)**
    - What we know: Coins use Sprites with a generated texture. Zombies are colored rectangles per D-07.
    - What's unclear: `Phaser.Physics.Arcade.Group` typically manages Sprites. Rectangle support may have quirks.
    - Recommendation: Generate a zombie texture (filled rectangle) in Preloader like coin texture, then use Sprites in the pool. More compatible with Group API.
+   - **Resolution:** Generate a filled-rectangle zombie texture in Preloader (like coin texture) and use `Phaser.Physics.Arcade.Sprite` in the pool. This is implemented in Plan 01 Task 1 (Preloader texture generation) and Plan 02 Task 2 (pool uses `classType: Phaser.Physics.Arcade.Sprite` with `key: SPRITE_ZOMBIE`).
 
-3. **Archer-to-tower binding persistence**
+3. **Archer-to-tower binding persistence (RESOLVED)**
    - What we know: D-13 says assign via coin drop at tower (like builder hut). But towers can be destroyed.
    - What's unclear: What happens to an archer whose tower is destroyed?
    - Recommendation: Archer becomes a wandering citizen again if tower is destroyed. Emit `structure:destroyed` event that archer listens to.
+   - **Resolution:** Archer listens for tower destruction and reverts to citizen behavior. Implemented in Plan 03 Task 2 (Archer entity) and Plan 04 (Game.ts wiring). The archer checks its tower's existence and, if destroyed, is removed from the archers array and a new citizen is created.
 
 ## Environment Availability
 
