@@ -33,6 +33,11 @@ export class Preloader extends Scene
         this.load.setPath('assets');
 
         this.load.image('logo', 'logo.png');
+
+        this.load.spritesheet('hero', 'gunner/Tiny Gunslinger 48x32.png', {
+            frameWidth: 48,
+            frameHeight: 32
+        });
     }
 
     create ()
