@@ -33,7 +33,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 - [x] 01-01-PLAN.md -- Infrastructure cleanup, constants, EventBus, scene chain, Arcade Physics
 - [x] 01-02-PLAN.md -- Hero entity, parallax world, camera follow, clean shutdown
-- [ ] 01-03-PLAN.md -- Coin pool, build points, collection/drop mechanic, visual checkpoint
+- [x] 01-03-PLAN.md -- Coin pool, build points, collection/drop mechanic, visual checkpoint
 
 ### Phase 2: Citizen Economy & Structures
 **Goal**: The indirect-control loop is complete — citizens generate coins, builders construct structures when coins are dropped, and the main base exists as a lose condition
