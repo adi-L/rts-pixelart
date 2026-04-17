@@ -29,7 +29,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Hero can drop coins at a designated build point and the interaction fires
   4. Object pool is in use — no coins or entities are created/destroyed at runtime after initial spawn
   5. Scene shuts down cleanly with no lingering listeners or physics bodies
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 01-01-PLAN.md -- Infrastructure cleanup, constants, EventBus, scene chain, Arcade Physics
+- [ ] 01-02-PLAN.md -- Hero entity, parallax world, camera follow, clean shutdown
+- [ ] 01-03-PLAN.md -- Coin pool, build points, collection/drop mechanic, visual checkpoint
 
 ### Phase 2: Citizen Economy & Structures
 **Goal**: The indirect-control loop is complete — citizens generate coins, builders construct structures when coins are dropped, and the main base exists as a lose condition
@@ -73,7 +77,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Hero Loop | 0/TBD | Not started | - |
+| 1. Foundation & Hero Loop | 0/3 | Not started | - |
 | 2. Citizen Economy & Structures | 0/TBD | Not started | - |
 | 3. Day/Night & Zombie Waves | 0/TBD | Not started | - |
 | 4. Combat & World Polish | 0/TBD | Not started | - |
