@@ -7,7 +7,9 @@ import {
   BUILD_POINT_PULSE_DURATION, COLOR_ACCENT, GROUND_Y,
   BUILD_POINT_FADE_IN, WALL_WOOD_COST, WALL_STONE_UPGRADE_COST,
   TOWER_COST, FARM_COST, BUILDER_HUT_COST, BASE_UPGRADE_COST_1,
-  BASE_UPGRADE_COST_2, BASE_UPGRADE_COST_3
+  BASE_UPGRADE_COST_2, BASE_UPGRADE_COST_3,
+  FLAG_POLE_WIDTH, FLAG_POLE_HEIGHT, FLAG_BANNER_WIDTH, FLAG_BANNER_HEIGHT,
+  FLAG_POLE_COLOR, FLAG_COLORS,
 } from '../constants';
 import type { BuildPointType, BuildPointConfig } from '../constants';
 import type { BaseStructure } from './structures/BaseStructure';
@@ -40,6 +42,8 @@ export class BuildPoint {
 
   private scene: Phaser.Scene;
   private pulseTween: Phaser.Tweens.Tween;
+  private flagPole: Phaser.GameObjects.Rectangle;
+  private flagBanner: Phaser.GameObjects.Rectangle;
 
   constructor(scene: Phaser.Scene, config: BuildPointConfig) {
     this.scene = scene;
@@ -53,6 +57,8 @@ export class BuildPoint {
     // Start locked or empty based on unlockTier
     this.state = config.unlockTier === 0 ? BuildPointState.Empty : BuildPointState.Locked;
 
+    const isVisible = this.state !== BuildPointState.Locked;
+
     // Visual marker -- gold rectangle sitting on the ground
     this.marker = scene.add
       .rectangle(
@@ -62,8 +68,24 @@ export class BuildPoint {
         BUILD_POINT_HEIGHT,
         COLOR_ACCENT
       )
-      .setAlpha(this.state === BuildPointState.Locked ? 0 : BUILD_POINT_IDLE_ALPHA_MIN)
+      .setAlpha(isVisible ? BUILD_POINT_IDLE_ALPHA_MIN : 0)
       .setDepth(4);
+
+    // Flag pole -- tall vertical line rising from ground
+    const poleY = GROUND_Y - FLAG_POLE_HEIGHT / 2;
+    this.flagPole = scene.add
+      .rectangle(config.x, poleY, FLAG_POLE_WIDTH, FLAG_POLE_HEIGHT, FLAG_POLE_COLOR)
+      .setAlpha(isVisible ? 0.8 : 0)
+      .setDepth(5);
+
+    // Flag banner -- colored rectangle at top of pole
+    const bannerColor = FLAG_COLORS[config.type] ?? COLOR_ACCENT;
+    const bannerX = config.x + FLAG_BANNER_WIDTH / 2 + FLAG_POLE_WIDTH / 2;
+    const bannerY = GROUND_Y - FLAG_POLE_HEIGHT + FLAG_BANNER_HEIGHT / 2;
+    this.flagBanner = scene.add
+      .rectangle(bannerX, bannerY, FLAG_BANNER_WIDTH, FLAG_BANNER_HEIGHT, bannerColor)
+      .setAlpha(isVisible ? 1 : 0)
+      .setDepth(5);
 
     // Idle pulse tween (only if not locked)
     this.pulseTween = scene.tweens.add({
@@ -81,8 +103,10 @@ export class BuildPoint {
     if (this.state !== BuildPointState.Locked) return;
     if (currentBaseTier >= this.unlockTier) {
       this.state = BuildPointState.Empty;
-      // Fade in animation
+      // Fade in animation for marker, pole, and banner
       this.marker.setAlpha(0);
+      this.flagPole.setAlpha(0);
+      this.flagBanner.setAlpha(0);
       this.scene.tweens.add({
         targets: this.marker,
         alpha: BUILD_POINT_IDLE_ALPHA_MIN,
@@ -90,6 +114,16 @@ export class BuildPoint {
         onComplete: () => {
           this.pulseTween.resume();
         },
+      });
+      this.scene.tweens.add({
+        targets: this.flagPole,
+        alpha: 0.8,
+        duration: BUILD_POINT_FADE_IN,
+      });
+      this.scene.tweens.add({
+        targets: this.flagBanner,
+        alpha: 1,
+        duration: BUILD_POINT_FADE_IN,
       });
     }
   }
@@ -161,15 +195,19 @@ export class BuildPoint {
     return this.coinsDeposited;
   }
 
-  /** Hide marker when structure is built */
+  /** Hide marker and flag when structure is built */
   hideMarker(): void {
     this.pulseTween.stop();
     this.marker.setVisible(false);
+    this.flagPole.setVisible(false);
+    this.flagBanner.setVisible(false);
   }
 
-  /** Show marker again for upgradeable state */
+  /** Show marker and flag again for upgradeable state */
   showMarker(): void {
     this.marker.setVisible(true);
+    this.flagPole.setVisible(true);
+    this.flagBanner.setVisible(true);
     this.pulseTween = this.scene.tweens.add({
       targets: this.marker,
       alpha: { from: BUILD_POINT_IDLE_ALPHA_MIN, to: BUILD_POINT_IDLE_ALPHA_MAX },
@@ -186,6 +224,8 @@ export class BuildPoint {
   destroy(): void {
     this.pulseTween.stop();
     this.marker.destroy();
+    this.flagPole.destroy();
+    this.flagBanner.destroy();
   }
 }
 

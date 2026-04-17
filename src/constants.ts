@@ -179,6 +179,20 @@ export const BASE_COLLAPSE_SHAKE_DURATION = 500;
 export const BASE_COLLAPSE_FALL_DURATION = 1000;
 export const SCREEN_FADE_DURATION = 500;
 
+// Build Point Flags
+export const FLAG_POLE_WIDTH = 2;
+export const FLAG_POLE_HEIGHT = 60;
+export const FLAG_BANNER_WIDTH = 12;
+export const FLAG_BANNER_HEIGHT = 10;
+export const FLAG_POLE_COLOR = 0x888888;
+export const FLAG_COLORS: Record<string, number> = {
+  base: 0xe2b714,   // gold
+  wall: 0x8B6914,   // brown
+  tower: 0x4A6B8A,  // blue-gray
+  hut: 0x7A5C3E,    // wood brown
+  farm: 0x2D5A27,   // green
+};
+
 // Build Point Layout (symmetric around x=3000)
 export type BuildPointType = 'base' | 'wall' | 'tower' | 'hut' | 'farm';
 
