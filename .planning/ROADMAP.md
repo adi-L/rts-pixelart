@@ -45,7 +45,13 @@ Plans:
   3. Dropping coins at a build point causes a builder to pick them up and construct a wall or tower
   4. Walls and towers are upgradeable by dropping more coins at the same build point
   5. The main base structure exists on the map and its destruction triggers a lose state
-**Plans**: TBD
+**Plans**: 5 plans
+Plans:
+- [ ] 02-01-PLAN.md -- Phase 2 constants, EconomyManager, HUD
+- [ ] 02-02-PLAN.md -- BaseNPC, Vagrant, Citizen entity classes
+- [ ] 02-03-PLAN.md -- Structure entities (Wall, Tower, Farm, BuilderHut) and BuildPoint extension
+- [ ] 02-04-PLAN.md -- MainBase, StructureManager, NPCManager, GameOver update
+- [ ] 02-05-PLAN.md -- Builder, Farmer NPCs, Game.ts full integration, visual checkpoint
 **UI hint**: yes
 
 ### Phase 3: Day/Night & Zombie Waves
@@ -77,7 +83,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Hero Loop | 0/3 | Not started | - |
-| 2. Citizen Economy & Structures | 0/TBD | Not started | - |
+| 1. Foundation & Hero Loop | 3/3 | Complete | - |
+| 2. Citizen Economy & Structures | 0/5 | Not started | - |
 | 3. Day/Night & Zombie Waves | 0/TBD | Not started | - |
 | 4. Combat & World Polish | 0/TBD | Not started | - |
