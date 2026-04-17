@@ -220,7 +220,7 @@ export class Game extends Scene {
       coinVisuals: [],
       timer: this.time.addEvent({
         delay: this.DEPOSIT_COIN_INTERVAL,
-        repeat: cost - 1,
+        repeat: cost - 2, // -2 because first coin is dropped immediately below
         callback: () => this.depositNextCoin(),
       }),
     };
@@ -269,13 +269,19 @@ export class Game extends Scene {
     });
   }
 
-  /** All coins deposited — fund the build point */
+  /** All coins deposited — fund the build point and build structure immediately */
   private completeDeposit(): void {
     if (!this.activeDeposit) return;
     const dep = this.activeDeposit;
 
     // Fund the build point
     dep.buildPoint.fundFull(dep.totalCost);
+
+    // Build structure immediately (no builder wait)
+    if (dep.buildPoint.type !== 'base') {
+      dep.buildPoint.state = BuildPointState.Building;
+      this.structureManager.completeConstruction(dep.buildPoint.id);
+    }
 
     // Fade out ground coins
     for (const coin of dep.coinVisuals) {
