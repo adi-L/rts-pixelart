@@ -24,9 +24,9 @@ decisions:
 metrics:
   duration: 2m 41s
   completed: 2026-04-17
-  tasks_completed: 2
+  tasks_completed: 3
   tasks_total: 3
-  status: checkpoint-pending
+  status: complete
 ---
 
 # Phase 01 Plan 03: Coin Economy and Build Points Summary
@@ -65,11 +65,22 @@ Modified `src/scenes/Preloader.ts`:
 - Added `createCoinTexture(this)` call before scene transition
 
 ### Task 3: Verify the playable coin-drop loop
-**Status:** CHECKPOINT -- awaiting human visual verification
+**Commit:** a73a172
+**Status:** PASSED -- human verified
+
+Fixes applied during verification:
+- Walk animation frames corrected (was using idle frames 0-5, now uses row 1 frames 8-15)
+- Hero physics body centered on sprite via setOffset
+- Coin depth set to 3 (was hidden behind ground at depth 0)
+- Build point detect radius doubled to 64px for usability
+- Coin physics body reliably enabled via world.enable() on pool spawn
+- Single base camp build point at world center (was 6 scattered)
+- Coin-fly animation from hero to build point on drop
 
 ## Deviations from Plan
 
-None -- plan executed exactly as written.
+- Build point count reduced from 6 to 1 (base camp only) per user direction
+- Added coin-fly visual feedback on drop (not in original plan, user requested)
 
 ## Known Stubs
 
