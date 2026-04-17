@@ -1,10 +1,7 @@
 import Phaser from 'phaser';
 import EventBus from '../events/EventBus';
 import {
-  BUILD_POINT_WIDTH, BUILD_POINT_HEIGHT, BUILD_POINT_DETECT_RADIUS,
-  BUILD_POINT_IDLE_ALPHA_MIN, BUILD_POINT_IDLE_ALPHA_MAX,
-  BUILD_POINT_ACTIVE_ALPHA_MIN, BUILD_POINT_ACTIVE_ALPHA_MAX,
-  BUILD_POINT_PULSE_DURATION, COLOR_ACCENT, GROUND_Y,
+  BUILD_POINT_DETECT_RADIUS, COLOR_ACCENT, GROUND_Y,
   BUILD_POINT_FADE_IN, WALL_WOOD_COST, WALL_STONE_UPGRADE_COST,
   TOWER_COST, FARM_COST, BUILDER_HUT_COST, BASE_UPGRADE_COST_1,
   BASE_UPGRADE_COST_2, BASE_UPGRADE_COST_3,
@@ -16,7 +13,7 @@ import type { BaseStructure } from './structures/BaseStructure';
 
 export enum BuildPointState {
   Locked,      // invisible, no interaction
-  Empty,       // pulsing marker, accepts coins
+  Empty,       // flag visible, accepts coins
   Funded,      // enough coins deposited, waiting for builder
   Building,    // builder is constructing
   Complete,    // structure exists
@@ -25,25 +22,27 @@ export enum BuildPointState {
 
 /**
  * BuildPoint -- a location where the hero can deposit coins.
- * Renders as a pulsing gold rectangle on the ground.
- * Glows brighter when the hero is within detection radius.
- * Supports full build lifecycle from Locked through Upgradeable.
+ * Renders as a flag pole with colored banner + coin counter text.
+ * Counter shows only when the hero is within detection radius.
  */
 export class BuildPoint {
   readonly id: string;
   readonly x: number;
   readonly type: BuildPointType;
   readonly unlockTier: number;
-  readonly marker: Phaser.GameObjects.Rectangle;
   coinsDeposited: number;
   isNearby: boolean;
   state: BuildPointState;
   structureRef: BaseStructure | null = null;
 
+  /** Kept for external references (e.g. coin fly target in Game.ts) */
+  readonly marker: Phaser.GameObjects.Rectangle;
+
   private scene: Phaser.Scene;
-  private pulseTween: Phaser.Tweens.Tween;
   private flagPole: Phaser.GameObjects.Rectangle;
   private flagBanner: Phaser.GameObjects.Rectangle;
+  private coinText: Phaser.GameObjects.Text;
+  private bannerPulseTween: Phaser.Tweens.Tween;
 
   constructor(scene: Phaser.Scene, config: BuildPointConfig) {
     this.scene = scene;
@@ -54,31 +53,23 @@ export class BuildPoint {
     this.coinsDeposited = 0;
     this.isNearby = false;
 
-    // Start locked or empty based on unlockTier
     this.state = config.unlockTier === 0 ? BuildPointState.Empty : BuildPointState.Locked;
-
     const isVisible = this.state !== BuildPointState.Locked;
 
-    // Visual marker -- gold rectangle sitting on the ground
+    // Invisible marker kept as coin-fly target anchor
     this.marker = scene.add
-      .rectangle(
-        config.x,
-        GROUND_Y - BUILD_POINT_HEIGHT / 2,
-        BUILD_POINT_WIDTH,
-        BUILD_POINT_HEIGHT,
-        COLOR_ACCENT
-      )
-      .setAlpha(isVisible ? BUILD_POINT_IDLE_ALPHA_MIN : 0)
+      .rectangle(config.x, GROUND_Y - 24, 1, 1, 0x000000)
+      .setAlpha(0)
       .setDepth(4);
 
-    // Flag pole -- tall vertical line rising from ground
+    // Flag pole
     const poleY = GROUND_Y - FLAG_POLE_HEIGHT / 2;
     this.flagPole = scene.add
       .rectangle(config.x, poleY, FLAG_POLE_WIDTH, FLAG_POLE_HEIGHT, FLAG_POLE_COLOR)
       .setAlpha(isVisible ? 0.8 : 0)
       .setDepth(5);
 
-    // Flag banner -- colored rectangle at top of pole
+    // Flag banner at top of pole
     const bannerColor = FLAG_COLORS[config.type] ?? COLOR_ACCENT;
     const bannerX = config.x + FLAG_BANNER_WIDTH / 2 + FLAG_POLE_WIDTH / 2;
     const bannerY = GROUND_Y - FLAG_POLE_HEIGHT + FLAG_BANNER_HEIGHT / 2;
@@ -87,15 +78,34 @@ export class BuildPoint {
       .setAlpha(isVisible ? 1 : 0)
       .setDepth(5);
 
-    // Idle pulse tween (only if not locked)
-    this.pulseTween = scene.tweens.add({
-      targets: this.marker,
-      alpha: { from: BUILD_POINT_IDLE_ALPHA_MIN, to: BUILD_POINT_IDLE_ALPHA_MAX },
-      duration: BUILD_POINT_PULSE_DURATION,
+    // Gentle banner pulse
+    this.bannerPulseTween = scene.tweens.add({
+      targets: this.flagBanner,
+      alpha: { from: 0.7, to: 1 },
+      duration: 1200,
       yoyo: true,
       repeat: -1,
-      paused: this.state === BuildPointState.Locked,
+      paused: !isVisible,
     });
+
+    // Coin counter text at base of pole (hidden until hero is nearby)
+    this.coinText = scene.add.text(
+      config.x,
+      GROUND_Y - 8,
+      this.getCoinLabel(),
+      { fontSize: '10px', color: '#e2b714', fontFamily: 'monospace', align: 'center' }
+    )
+      .setOrigin(0.5, 1)
+      .setDepth(6)
+      .setAlpha(0);
+  }
+
+  private getCoinLabel(): string {
+    return `${this.coinsDeposited}/${this.cost}`;
+  }
+
+  private refreshCoinText(): void {
+    this.coinText.setText(this.getCoinLabel());
   }
 
   /** Check and apply unlock based on current base tier */
@@ -103,18 +113,8 @@ export class BuildPoint {
     if (this.state !== BuildPointState.Locked) return;
     if (currentBaseTier >= this.unlockTier) {
       this.state = BuildPointState.Empty;
-      // Fade in animation for marker, pole, and banner
-      this.marker.setAlpha(0);
       this.flagPole.setAlpha(0);
       this.flagBanner.setAlpha(0);
-      this.scene.tweens.add({
-        targets: this.marker,
-        alpha: BUILD_POINT_IDLE_ALPHA_MIN,
-        duration: BUILD_POINT_FADE_IN,
-        onComplete: () => {
-          this.pulseTween.resume();
-        },
-      });
       this.scene.tweens.add({
         targets: this.flagPole,
         alpha: 0.8,
@@ -124,7 +124,11 @@ export class BuildPoint {
         targets: this.flagBanner,
         alpha: 1,
         duration: BUILD_POINT_FADE_IN,
+        onComplete: () => {
+          this.bannerPulseTween.resume();
+        },
       });
+      this.refreshCoinText();
     }
   }
 
@@ -144,8 +148,7 @@ export class BuildPoint {
   }
 
   /**
-   * Update proximity state. Switches between idle and active pulse intensity.
-   * No-op if state is Locked or Building, or if state is unchanged.
+   * Update proximity state. Shows/hides coin counter.
    */
   setNearby(near: boolean): void {
     if (this.state === BuildPointState.Locked || this.state === BuildPointState.Building) {
@@ -155,21 +158,28 @@ export class BuildPoint {
     if (this.isNearby === near) return;
     this.isNearby = near;
 
-    this.pulseTween.stop();
+    // Show/hide coin counter when hero is nearby
+    this.scene.tweens.add({
+      targets: this.coinText,
+      alpha: near ? 1 : 0,
+      duration: 200,
+    });
 
+    // Brighten/dim the banner
+    this.bannerPulseTween.stop();
     if (near) {
-      this.pulseTween = this.scene.tweens.add({
-        targets: this.marker,
-        alpha: { from: BUILD_POINT_ACTIVE_ALPHA_MIN, to: BUILD_POINT_ACTIVE_ALPHA_MAX },
-        duration: BUILD_POINT_PULSE_DURATION,
+      this.bannerPulseTween = this.scene.tweens.add({
+        targets: this.flagBanner,
+        alpha: { from: 0.9, to: 1 },
+        duration: 400,
         yoyo: true,
         repeat: -1,
       });
     } else {
-      this.pulseTween = this.scene.tweens.add({
-        targets: this.marker,
-        alpha: { from: BUILD_POINT_IDLE_ALPHA_MIN, to: BUILD_POINT_IDLE_ALPHA_MAX },
-        duration: BUILD_POINT_PULSE_DURATION,
+      this.bannerPulseTween = this.scene.tweens.add({
+        targets: this.flagBanner,
+        alpha: { from: 0.7, to: 1 },
+        duration: 1200,
         yoyo: true,
         repeat: -1,
       });
@@ -178,15 +188,14 @@ export class BuildPoint {
 
   /**
    * Deposit a coin at this build point.
-   * Rejects coins in Locked or Building state.
-   * Emits coin:deposited on the EventBus with build point ID, running total, and type.
-   * Returns the new total.
+   * Emits coin:deposited on the EventBus.
    */
   addCoin(): number {
     if (this.state === BuildPointState.Locked || this.state === BuildPointState.Building) {
       return this.coinsDeposited;
     }
     this.coinsDeposited++;
+    this.refreshCoinText();
     EventBus.emit('coin:deposited', {
       buildPointId: this.id,
       total: this.coinsDeposited,
@@ -195,39 +204,37 @@ export class BuildPoint {
     return this.coinsDeposited;
   }
 
-  /** Hide marker and flag when structure is built */
+  /** Hide flag when structure is built */
   hideMarker(): void {
-    this.pulseTween.stop();
+    this.bannerPulseTween.stop();
     this.marker.setVisible(false);
     this.flagPole.setVisible(false);
     this.flagBanner.setVisible(false);
+    this.coinText.setVisible(false);
   }
 
-  /** Show marker and flag again for upgradeable state */
+  /** Show flag again for upgradeable state */
   showMarker(): void {
-    this.marker.setVisible(true);
     this.flagPole.setVisible(true);
     this.flagBanner.setVisible(true);
-    this.pulseTween = this.scene.tweens.add({
-      targets: this.marker,
-      alpha: { from: BUILD_POINT_IDLE_ALPHA_MIN, to: BUILD_POINT_IDLE_ALPHA_MAX },
-      duration: BUILD_POINT_PULSE_DURATION,
+    this.coinText.setVisible(true);
+    this.refreshCoinText();
+    this.bannerPulseTween = this.scene.tweens.add({
+      targets: this.flagBanner,
+      alpha: { from: 0.7, to: 1 },
+      duration: 1200,
       yoyo: true,
       repeat: -1,
     });
   }
 
-  /**
-   * Clean up tweens and graphics on scene shutdown.
-   * Does NOT destroy structureRef -- StructureManager handles that.
-   */
   destroy(): void {
-    this.pulseTween.stop();
+    this.bannerPulseTween.stop();
     this.marker.destroy();
     this.flagPole.destroy();
     this.flagBanner.destroy();
+    this.coinText.destroy();
   }
 }
 
-// Re-export the detection radius for convenience
 export { BUILD_POINT_DETECT_RADIUS };

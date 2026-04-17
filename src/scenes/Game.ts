@@ -182,11 +182,24 @@ export class Game extends Scene {
       }
     }
 
-    // No valid target or 0 coins: red flash on hero
+    // No valid target or 0 coins: coin falls to ground
     if (this.economy.coins === 0 && (hasNearbyVagrant || nearBp)) {
       this.hero.sprite.setTint(0xff0000);
       this.time.delayedCall(100, () => {
         this.hero.sprite.clearTint();
+      });
+      // Animate an empty coin falling from hero to ground
+      const fallCoin = this.add.circle(
+        heroX, this.hero.sprite.y - 10,
+        COIN_SIZE * 0.7, 0x888888
+      ).setAlpha(0.6).setDepth(10);
+      this.tweens.add({
+        targets: fallCoin,
+        y: GROUND_Y - COIN_SIZE,
+        alpha: 0,
+        duration: 400,
+        ease: 'Bounce.easeOut',
+        onComplete: () => fallCoin.destroy(),
       });
     }
   }
