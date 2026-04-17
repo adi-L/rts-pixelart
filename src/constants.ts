@@ -63,6 +63,42 @@ export const SPRITE_HERO_FRAME_HEIGHT = 32;
 
 // ===== PHASE 2: Citizen Economy & Structures =====
 
+// HUD
+export const HUD_MARGIN = 16;
+export const HUD_COIN_ICON_SIZE = 16;
+export const HUD_COIN_TEXT_SIZE = '20px';
+export const HUD_LABEL_TEXT_SIZE = '14px';
+export const HUD_COIN_X = 40;
+export const HUD_DAY_LABEL_X = 100;
+export const HUD_Y = 16;
+export const HUD_DEPTH = 100;
+
+// NPC Dimensions
+export const NPC_WIDTH = 16;
+export const NPC_HEIGHT = 32;
+
+// NPC Colors
+export const COLOR_VAGRANT = 0x666666;
+export const COLOR_CITIZEN = 0x4488CC;
+export const COLOR_BUILDER = 0x8B6914;
+export const COLOR_FARMER = 0x44AA44;
+
+// NPC Speeds
+export const VAGRANT_DRIFT_SPEED = 30;
+export const CITIZEN_WANDER_SPEED = 40;
+export const CITIZEN_RUN_SPEED = 120;
+export const BUILDER_WALK_SPEED = 80;
+export const FARMER_WALK_SPEED = 50;
+
+// NPC Behavior
+export const VAGRANT_WANDER_RANGE = 40;
+export const CITIZEN_WANDER_RANGE = 200;
+export const BUILDER_WANDER_RANGE = 80;
+export const FARMER_WORK_RANGE = 64;
+export const VAGRANT_RECRUIT_RADIUS = 64;
+export const VAGRANT_RESPAWN_INTERVAL = 60000;
+export const VAGRANT_INITIAL_COUNT = 4;
+
 // Structure Dimensions
 export const WALL_WIDTH = 32;
 export const WALL_WOOD_HEIGHT = 48;
@@ -83,6 +119,28 @@ export const COLOR_TOWER_PLATFORM = 0x6A8BAA;
 export const COLOR_FARM = 0x2D5A27;
 export const COLOR_BUILDER_HUT = 0x7A5C3E;
 
+// Main Base
+export const BASE_TIER1_WIDTH = 96;
+export const BASE_TIER1_HEIGHT = 64;
+export const BASE_TIER2_WIDTH = 128;
+export const BASE_TIER2_HEIGHT = 72;
+export const BASE_TIER3_WIDTH = 160;
+export const BASE_TIER3_HEIGHT = 80;
+export const BASE_TIER_MAX_WIDTH = 192;
+export const BASE_WING_TIER2_WIDTH = 32;
+export const BASE_WING_TIER2_HEIGHT = 48;
+export const BASE_WING_TIER3_WIDTH = 48;
+export const BASE_WING_TIER3_HEIGHT = 56;
+export const COLOR_BASE_TIER1 = 0x5C4033;
+export const COLOR_BASE_TIER2 = 0x4A3728;
+export const COLOR_BASE_TIER3 = 0x3D2B1F;
+export const BASE_UPGRADE_COST_1 = 5;
+export const BASE_UPGRADE_COST_2 = 15;
+export const BASE_UPGRADE_COST_3 = 30;
+export const BASE_TIER1_HP = 100;
+export const BASE_TIER2_HP = 150;
+export const BASE_TIER3_HP = 200;
+
 // Health Bar
 export const HEALTH_BAR_WIDTH = 48;
 export const HEALTH_BAR_HEIGHT = 4;
@@ -92,10 +150,14 @@ export const COLOR_HEALTH_HIGH = 0x44CC44;
 export const COLOR_HEALTH_MID = 0xCCAA44;
 export const COLOR_HEALTH_LOW = 0xCC4444;
 
-// Structure HP
-export const WALL_WOOD_HP = 50;
-export const WALL_STONE_HP = 100;
-export const TOWER_HP = 60;
+// Construction
+export const BUILDER_CONSTRUCT_DURATION = 3000;
+export const BUILDER_HAMMER_AMPLITUDE = 4;
+export const BUILDER_HAMMER_PERIOD = 300;
+
+// Farm Economy
+export const FARM_COIN_INTERVAL = 8000;
+export const FARM_COIN_FLOAT_DURATION = 800;
 
 // Structure Costs
 export const WALL_WOOD_COST = 3;
@@ -104,17 +166,20 @@ export const TOWER_COST = 6;
 export const FARM_COST = 4;
 export const BUILDER_HUT_COST = 3;
 
-// Main Base Costs
-export const BASE_UPGRADE_COST_1 = 5;
-export const BASE_UPGRADE_COST_2 = 15;
-export const BASE_UPGRADE_COST_3 = 30;
+// Structure HP
+export const WALL_WOOD_HP = 50;
+export const WALL_STONE_HP = 100;
+export const TOWER_HP = 60;
 
 // Tween Durations
 export const STRUCTURE_SCALE_PULSE = 200;
 export const FLASH_TINT_DURATION = 100;
 export const BUILD_POINT_FADE_IN = 500;
+export const BASE_COLLAPSE_SHAKE_DURATION = 500;
+export const BASE_COLLAPSE_FALL_DURATION = 1000;
+export const SCREEN_FADE_DURATION = 500;
 
-// Build Point Layout
+// Build Point Layout (symmetric around x=3000)
 export type BuildPointType = 'base' | 'wall' | 'tower' | 'hut' | 'farm';
 
 export interface BuildPointConfig {
