@@ -64,7 +64,12 @@ Plans:
   3. Zombies deal damage to walls, towers, and the main base on contact
   4. Each successive night spawns more zombies than the previous one
   5. An archer NPC stationed in a tower attacks incoming zombies automatically at night
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 03-01-PLAN.md -- Phase 3 constants, DayNightCycleManager, HUD warning, textures
+- [ ] 03-02-PLAN.md -- WaveManager, zombie pool, zombie AI (march/attack/die)
+- [ ] 03-03-PLAN.md -- Archer entity, arrow pool, NPCManager archer support
+- [ ] 03-04-PLAN.md -- Game.ts full integration, visual checkpoint
 
 ### Phase 4: Combat & World Polish
 **Goal**: The hero can fight, the world is explorable, and the game is a complete playable skirmish
@@ -85,5 +90,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Foundation & Hero Loop | 3/3 | Complete | - |
 | 2. Citizen Economy & Structures | 4/5 | In Progress|  |
-| 3. Day/Night & Zombie Waves | 0/TBD | Not started | - |
+| 3. Day/Night & Zombie Waves | 0/4 | Not started | - |
 | 4. Combat & World Polish | 0/TBD | Not started | - |
