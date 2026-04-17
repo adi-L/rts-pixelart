@@ -9,6 +9,7 @@ import { Builder } from '../entities/npc/Builder';
 import { Farmer } from '../entities/npc/Farmer';
 import { BuildPointState } from '../entities/BuildPoint';
 import EventBus from '../events/EventBus';
+import { BuildPoint } from '../entities/BuildPoint';
 import {
   WORLD_WIDTH, WORLD_HEIGHT, GROUND_Y, GROUND_HEIGHT,
   GROUND_COLOR, GROUND_EDGE_COLOR, COLOR_SKY, COLOR_MID,
@@ -34,6 +35,16 @@ export class Game extends Scene {
 
   // Role assignment listener references
   private onStructureBuilt!: (data: { buildPointId: string; type: string; x: number }) => void;
+
+  // Coin deposit channel state
+  private activeDeposit: {
+    buildPoint: BuildPoint;
+    totalCost: number;
+    coinsSpent: number;
+    coinVisuals: Phaser.GameObjects.Arc[];
+    timer: Phaser.Time.TimerEvent;
+  } | null = null;
+  private readonly DEPOSIT_COIN_INTERVAL = 300; // ms between each coin drop
 
   constructor() {
     super('Game');
@@ -105,6 +116,7 @@ export class Game extends Scene {
 
     // Clean shutdown
     this.events.once('shutdown', () => {
+      if (this.activeDeposit) this.cancelDeposit();
       EventBus.off('structure:built', this.onStructureBuilt);
       EventBus.removeAllListeners();
       this.npcManager.destroy();
@@ -126,6 +138,14 @@ export class Game extends Scene {
     // Auto-assign citizens near unmanned farms to farmer role (D-04)
     this.checkFarmProximity();
 
+    // Check if hero walked away from active deposit channel
+    if (this.activeDeposit) {
+      const dist = Math.abs(this.hero.sprite.x - this.activeDeposit.buildPoint.x);
+      if (dist > BUILD_POINT_DETECT_RADIUS) {
+        this.cancelDeposit();
+      }
+    }
+
     // Coin drop / recruitment logic
     if (Phaser.Input.Keyboard.JustDown(this.dropKey) || Phaser.Input.Keyboard.JustDown(this.dropKeyDown)) {
       this.handleDrop();
@@ -133,6 +153,9 @@ export class Game extends Scene {
   }
 
   private handleDrop(): void {
+    // If already channeling a deposit, ignore extra presses
+    if (this.activeDeposit) return;
+
     const heroX = this.hero.sprite.x;
 
     // Priority 1: Recruit nearby vagrant (D-01)
@@ -141,12 +164,11 @@ export class Game extends Scene {
     );
     if (hasNearbyVagrant) {
       if (this.npcManager.tryRecruitNearby(heroX)) {
-        return; // Recruitment consumed the coin drop
+        return;
       }
-      // If tryRecruitNearby returned false (0 coins), fall through to red flash below
     }
 
-    // Priority 2: Pay full cost at nearby build point (all-or-nothing)
+    // Priority 2: Start deposit channel at nearby build point
     const nearBp = this.structureManager.buildPoints.find(
       bp => Math.abs(heroX - bp.x) <= BUILD_POINT_DETECT_RADIUS &&
             bp.state !== BuildPointState.Locked &&
@@ -156,34 +178,16 @@ export class Game extends Scene {
     if (nearBp) {
       const cost = nearBp.cost;
       if (this.economy.coins >= cost) {
-        // Can afford — spend all coins and fund immediately
-        this.economy.spendCoins(cost);
-        nearBp.fundFull(cost);
-        // Visual: coins fly from hero to flag
-        for (let i = 0; i < cost; i++) {
-          const flyCoin = this.add.circle(
-            this.hero.sprite.x, this.hero.sprite.y,
-            COIN_SIZE * 0.5, COLOR_ACCENT
-          ).setDepth(10);
-          this.tweens.add({
-            targets: flyCoin,
-            x: nearBp.x + (i - cost / 2) * 6,
-            y: GROUND_Y - 20,
-            scaleX: 0.5, scaleY: 0.5,
-            duration: COIN_DROP_BOUNCE_DURATION + i * 50,
-            ease: 'Quad.easeIn',
-            onComplete: () => flyCoin.destroy(),
-          });
-        }
+        this.startDeposit(nearBp, cost);
         return;
       } else {
-        // Can't afford — coins fall to ground, red flash
+        // Can't afford — red flash + coins fall
         this.hero.sprite.setTint(0xff0000);
         this.time.delayedCall(100, () => this.hero.sprite.clearTint());
-        const coinCount = Math.max(1, this.economy.coins || 1);
-        for (let i = 0; i < coinCount; i++) {
+        const showCount = Math.max(1, this.economy.coins || 1);
+        for (let i = 0; i < showCount; i++) {
           const fallCoin = this.add.circle(
-            heroX + (i - coinCount / 2) * 8,
+            heroX + (i - showCount / 2) * 8,
             this.hero.sprite.y - 10,
             COIN_SIZE * 0.5, 0x888888
           ).setAlpha(0.6).setDepth(10);
@@ -205,6 +209,113 @@ export class Game extends Scene {
       this.hero.sprite.setTint(0xff0000);
       this.time.delayedCall(100, () => this.hero.sprite.clearTint());
     }
+  }
+
+  /** Start channeling coins into a build point one at a time */
+  private startDeposit(bp: BuildPoint, cost: number): void {
+    this.activeDeposit = {
+      buildPoint: bp,
+      totalCost: cost,
+      coinsSpent: 0,
+      coinVisuals: [],
+      timer: this.time.addEvent({
+        delay: this.DEPOSIT_COIN_INTERVAL,
+        repeat: cost - 1,
+        callback: () => this.depositNextCoin(),
+      }),
+    };
+    // Drop first coin immediately
+    this.depositNextCoin();
+  }
+
+  /** Drop the next coin in the channel sequence */
+  private depositNextCoin(): void {
+    if (!this.activeDeposit) return;
+    const dep = this.activeDeposit;
+
+    // Spend one coin from economy
+    if (!this.economy.spendCoins(1)) {
+      this.cancelDeposit();
+      return;
+    }
+    dep.coinsSpent++;
+
+    // Animate coin flying from hero to build point ground
+    const spread = (dep.coinsSpent - 1 - (dep.totalCost - 1) / 2) * (COIN_SIZE + 2);
+    const targetX = dep.buildPoint.x + spread;
+    const targetY = GROUND_Y - COIN_SIZE / 2 - 2;
+
+    const flyCoin = this.add.circle(
+      this.hero.sprite.x, this.hero.sprite.y,
+      COIN_SIZE * 0.5, COLOR_ACCENT
+    ).setDepth(10);
+
+    this.tweens.add({
+      targets: flyCoin,
+      x: targetX,
+      y: targetY,
+      duration: COIN_DROP_BOUNCE_DURATION,
+      ease: 'Quad.easeIn',
+      onComplete: () => {
+        // Leave coin sitting on the ground
+        flyCoin.setAlpha(0.9);
+        dep.coinVisuals.push(flyCoin);
+
+        // Check if deposit is complete
+        if (dep.coinsSpent >= dep.totalCost) {
+          this.completeDeposit();
+        }
+      },
+    });
+  }
+
+  /** All coins deposited — fund the build point */
+  private completeDeposit(): void {
+    if (!this.activeDeposit) return;
+    const dep = this.activeDeposit;
+
+    // Fund the build point
+    dep.buildPoint.fundFull(dep.totalCost);
+
+    // Fade out ground coins
+    for (const coin of dep.coinVisuals) {
+      this.tweens.add({
+        targets: coin,
+        alpha: 0,
+        scaleX: 0.3, scaleY: 0.3,
+        duration: 300,
+        onComplete: () => coin.destroy(),
+      });
+    }
+
+    dep.timer.remove();
+    this.activeDeposit = null;
+  }
+
+  /** Hero walked away — refund coins and animate them falling */
+  private cancelDeposit(): void {
+    if (!this.activeDeposit) return;
+    const dep = this.activeDeposit;
+
+    // Stop the timer
+    dep.timer.remove();
+
+    // Refund spent coins
+    this.economy.addCoins(dep.coinsSpent, 'refund');
+
+    // Animate deposited coins falling and fading
+    for (const coin of dep.coinVisuals) {
+      this.tweens.add({
+        targets: coin,
+        y: GROUND_Y - COIN_SIZE,
+        alpha: 0,
+        duration: 400,
+        ease: 'Bounce.easeOut',
+        onComplete: () => coin.destroy(),
+      });
+    }
+
+    this.activeDeposit = null;
   }
 
   /** Convert the nearest idle citizen into a Builder (D-04) */
