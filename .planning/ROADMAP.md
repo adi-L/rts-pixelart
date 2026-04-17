@@ -50,7 +50,7 @@ Plans:
 - [x] 02-01-PLAN.md -- Phase 2 constants, EconomyManager, HUD
 - [x] 02-02-PLAN.md -- BaseNPC, Vagrant, Citizen entity classes
 - [x] 02-03-PLAN.md -- Structure entities (Wall, Tower, Farm, BuilderHut) and BuildPoint extension
-- [ ] 02-04-PLAN.md -- MainBase, StructureManager, NPCManager, GameOver update
+- [x] 02-04-PLAN.md -- MainBase, StructureManager, NPCManager, GameOver update
 - [ ] 02-05-PLAN.md -- Builder, Farmer NPCs, Game.ts full integration, visual checkpoint
 **UI hint**: yes
 
@@ -84,6 +84,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Hero Loop | 3/3 | Complete | - |
-| 2. Citizen Economy & Structures | 0/5 | Not started | - |
+| 2. Citizen Economy & Structures | 4/5 | In Progress|  |
 | 3. Day/Night & Zombie Waves | 0/TBD | Not started | - |
 | 4. Combat & World Polish | 0/TBD | Not started | - |

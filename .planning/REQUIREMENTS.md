@@ -30,16 +30,16 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### NPCs
 
-- [ ] **NPC-01**: Builder NPC picks up dropped coins and constructs/upgrades structures
+- [x] **NPC-01**: Builder NPC picks up dropped coins and constructs/upgrades structures
 - [ ] **NPC-02**: Citizen NPC walks around and generates passive coin income over time
 - [ ] **NPC-03**: Archer NPC hunts by day (earns coins) and defends tower at night
-- [ ] **NPC-04**: Farmer NPC works a farm for passive income
+- [x] **NPC-04**: Farmer NPC works a farm for passive income
 
 ### Structures
 
 - [ ] **STRC-01**: Wall blocks zombies, upgradeable (wood to stone), takes damage
 - [ ] **STRC-02**: Tower provides archer position for night defense
-- [ ] **STRC-03**: Main base is the central structure; lose condition if destroyed
+- [x] **STRC-03**: Main base is the central structure; lose condition if destroyed
 - [ ] **STRC-04**: Build points at fixed locations where coins can be dropped
 
 ### Day/Night & Combat
@@ -114,13 +114,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 | COIN-02 | Phase 1 | Pending |
 | COIN-03 | Phase 2 | Pending |
 | COIN-04 | Phase 2 | Pending |
-| NPC-01 | Phase 2 | Pending |
+| NPC-01 | Phase 2 | Complete |
 | NPC-02 | Phase 2 | Pending |
 | NPC-03 | Phase 3 | Pending |
-| NPC-04 | Phase 2 | Pending |
+| NPC-04 | Phase 2 | Complete |
 | STRC-01 | Phase 2 | Pending |
 | STRC-02 | Phase 2 | Pending |
-| STRC-03 | Phase 2 | Pending |
+| STRC-03 | Phase 2 | Complete |
 | STRC-04 | Phase 2 | Pending |
 | WAVE-01 | Phase 3 | Pending |
 | WAVE-02 | Phase 3 | Pending |
