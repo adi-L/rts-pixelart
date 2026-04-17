@@ -49,12 +49,11 @@ export function spawnCoin(
   const coin = pool.get(x, y, SPRITE_COIN) as Phaser.Physics.Arcade.Sprite;
   if (!coin) return null;
 
-  coin.setActive(true).setVisible(true).setScale(COIN_SCALE);
+  coin.setActive(true).setVisible(true).setScale(COIN_SCALE).setDepth(3);
 
-  // Enable physics body for overlap detection
-  if (coin.body) {
-    (coin.body as Phaser.Physics.Arcade.Body).enable = true;
-  }
+  // Enable and reset physics body for overlap detection
+  scene.physics.world.enable(coin);
+  (coin.body as Phaser.Physics.Arcade.Body).enable = true;
 
   // Spin tween: coin squashes horizontally to simulate rotation
   scene.tweens.add({

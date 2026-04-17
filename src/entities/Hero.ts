@@ -3,7 +3,7 @@ import {
   HERO_SPEED, HERO_SCALE, HERO_BODY_WIDTH, HERO_BODY_HEIGHT,
   HERO_IDLE_FRAMES_START, HERO_IDLE_FRAMES_END, HERO_IDLE_FPS,
   HERO_WALK_FRAMES_START, HERO_WALK_FRAMES_END, HERO_WALK_FPS,
-  SPRITE_HERO
+  SPRITE_HERO, SPRITE_HERO_FRAME_WIDTH, SPRITE_HERO_FRAME_HEIGHT
 } from '../constants';
 
 export class Hero {
@@ -22,6 +22,12 @@ export class Hero {
     this.sprite = scene.physics.add.sprite(x, y, SPRITE_HERO);
     this.sprite.setScale(HERO_SCALE);
     this.sprite.body!.setSize(HERO_BODY_WIDTH, HERO_BODY_HEIGHT);
+    // Center body on the scaled sprite (48x32 * scale 2 = 96x64 visual)
+    const body = this.sprite.body as Phaser.Physics.Arcade.Body;
+    body.setOffset(
+      (SPRITE_HERO_FRAME_WIDTH - HERO_BODY_WIDTH) / 2,
+      (SPRITE_HERO_FRAME_HEIGHT - HERO_BODY_HEIGHT) / 2
+    );
     this.sprite.setCollideWorldBounds(true);
     (this.sprite.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
 

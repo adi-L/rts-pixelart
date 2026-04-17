@@ -10,7 +10,7 @@ import {
   HERO_START_X, HERO_BODY_HEIGHT, PARALLAX_MID,
   COIN_INITIAL_SPAWN_COUNT, COIN_DROP_BOUNCE_DURATION,
   BUILD_POINT_POSITIONS, BUILD_POINT_DETECT_RADIUS,
-  COIN_SIZE, COIN_SCALE
+  COIN_SIZE, COIN_SCALE, COLOR_ACCENT
 } from '../constants';
 
 export class Game extends Scene {
@@ -133,13 +133,31 @@ export class Game extends Scene {
         this.coinCount--;
         this.coinCountText.setText(`Coins: ${this.coinCount}`);
         nearBp.addCoin();
-        // Visual feedback: brief scale bounce on build point marker per UI-SPEC
+
+        // Visual: coin flies from hero to build point
+        const flyCoin = this.add.circle(
+          this.hero.sprite.x, this.hero.sprite.y,
+          COIN_SIZE, COLOR_ACCENT
+        ).setDepth(10);
         this.tweens.add({
-          targets: nearBp.marker,
-          scaleX: 1.3,
-          scaleY: 1.3,
-          duration: COIN_DROP_BOUNCE_DURATION / 2,
-          yoyo: true,
+          targets: flyCoin,
+          x: nearBp.x,
+          y: nearBp.marker.y,
+          scaleX: 0.5,
+          scaleY: 0.5,
+          duration: COIN_DROP_BOUNCE_DURATION,
+          ease: 'Quad.easeIn',
+          onComplete: () => {
+            flyCoin.destroy();
+            // Bounce the build point on coin arrival
+            this.tweens.add({
+              targets: nearBp.marker,
+              scaleX: 1.3,
+              scaleY: 1.3,
+              duration: COIN_DROP_BOUNCE_DURATION / 2,
+              yoyo: true,
+            });
+          },
         });
       } else if (nearBp && this.coinCount === 0) {
         // Drop attempt with 0 coins: brief red tint flash on hero per UI-SPEC

@@ -19,10 +19,10 @@ export const HERO_BODY_WIDTH = 24;
 export const HERO_BODY_HEIGHT = 48;
 export const HERO_START_X = 3000;
 export const HERO_IDLE_FRAMES_START = 0;
-export const HERO_IDLE_FRAMES_END = 3;
+export const HERO_IDLE_FRAMES_END = 5;
 export const HERO_IDLE_FPS = 8;
-export const HERO_WALK_FRAMES_START = 0;
-export const HERO_WALK_FRAMES_END = 5;
+export const HERO_WALK_FRAMES_START = 8;
+export const HERO_WALK_FRAMES_END = 15;
 export const HERO_WALK_FPS = 10;
 
 // Camera
@@ -41,13 +41,13 @@ export const COIN_INITIAL_SPAWN_COUNT = 20;
 // Build Points
 export const BUILD_POINT_WIDTH = 32;
 export const BUILD_POINT_HEIGHT = 48;
-export const BUILD_POINT_DETECT_RADIUS = 32;
+export const BUILD_POINT_DETECT_RADIUS = 64;
 export const BUILD_POINT_IDLE_ALPHA_MIN = 0.3;
 export const BUILD_POINT_IDLE_ALPHA_MAX = 0.7;
 export const BUILD_POINT_ACTIVE_ALPHA_MIN = 0.7;
 export const BUILD_POINT_ACTIVE_ALPHA_MAX = 1.0;
 export const BUILD_POINT_PULSE_DURATION = 1000;
-export const BUILD_POINT_POSITIONS = [500, 1500, 2500, 3500, 4500, 5500];
+export const BUILD_POINT_POSITIONS = [3000]; // Base camp at world center
 
 // Parallax scroll factors
 export const PARALLAX_SKY = 0.0;
