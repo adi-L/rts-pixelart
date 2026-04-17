@@ -54,6 +54,19 @@ export const PARALLAX_SKY = 0.0;
 export const PARALLAX_MID = 0.3;
 export const PARALLAX_GROUND = 1.0;
 
+// NPC
+export const NPC_WIDTH = 16;
+export const NPC_HEIGHT = 32;
+export const COLOR_VAGRANT = 0x666666;
+export const COLOR_CITIZEN = 0x4488CC;
+export const VAGRANT_DRIFT_SPEED = 30;
+export const CITIZEN_WANDER_SPEED = 40;
+export const CITIZEN_RUN_SPEED = 120;
+export const VAGRANT_WANDER_RANGE = 40;
+export const CITIZEN_WANDER_RANGE = 200;
+export const VAGRANT_RECRUIT_RADIUS = 64;
+export const FLASH_TINT_DURATION = 100;
+
 // Sprite keys (per MAP-02 -- replaceable via config)
 export const SPRITE_HERO = 'hero';
 export const SPRITE_COIN = 'coin';
