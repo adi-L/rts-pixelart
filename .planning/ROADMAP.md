@@ -51,7 +51,7 @@ Plans:
 - [x] 02-02-PLAN.md -- BaseNPC, Vagrant, Citizen entity classes
 - [x] 02-03-PLAN.md -- Structure entities (Wall, Tower, Farm, BuilderHut) and BuildPoint extension
 - [x] 02-04-PLAN.md -- MainBase, StructureManager, NPCManager, GameOver update
-- [ ] 02-05-PLAN.md -- Builder, Farmer NPCs, Game.ts full integration, visual checkpoint
+- [x] 02-05-PLAN.md -- Builder, Farmer NPCs, Game.ts full integration, visual checkpoint
 **UI hint**: yes
 
 ### Phase 3: Day/Night & Zombie Waves
