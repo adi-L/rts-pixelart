@@ -47,9 +47,9 @@ Plans:
   5. The main base structure exists on the map and its destruction triggers a lose state
 **Plans**: 5 plans
 Plans:
-- [ ] 02-01-PLAN.md -- Phase 2 constants, EconomyManager, HUD
-- [ ] 02-02-PLAN.md -- BaseNPC, Vagrant, Citizen entity classes
-- [ ] 02-03-PLAN.md -- Structure entities (Wall, Tower, Farm, BuilderHut) and BuildPoint extension
+- [x] 02-01-PLAN.md -- Phase 2 constants, EconomyManager, HUD
+- [x] 02-02-PLAN.md -- BaseNPC, Vagrant, Citizen entity classes
+- [x] 02-03-PLAN.md -- Structure entities (Wall, Tower, Farm, BuilderHut) and BuildPoint extension
 - [ ] 02-04-PLAN.md -- MainBase, StructureManager, NPCManager, GameOver update
 - [ ] 02-05-PLAN.md -- Builder, Farmer NPCs, Game.ts full integration, visual checkpoint
 **UI hint**: yes
