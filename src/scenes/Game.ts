@@ -9,7 +9,7 @@ import {
   CAMERA_LERP, CAMERA_DEADZONE_WIDTH,
   HERO_START_X, HERO_BODY_HEIGHT, PARALLAX_MID,
   COIN_INITIAL_SPAWN_COUNT, COIN_DROP_BOUNCE_DURATION,
-  BUILD_POINT_POSITIONS, BUILD_POINT_DETECT_RADIUS,
+  BUILD_POINT_LAYOUT, BUILD_POINT_DETECT_RADIUS,
   COIN_SIZE, COIN_SCALE, COLOR_ACCENT
 } from '../constants';
 
@@ -84,9 +84,9 @@ export class Game extends Scene {
       }
     );
 
-    // Build points (D-12)
-    BUILD_POINT_POSITIONS.forEach((bpX, i) => {
-      this.buildPoints.push(new BuildPoint(this, bpX, `bp-${i}`));
+    // Build points (D-12) -- use BUILD_POINT_LAYOUT for typed build points
+    BUILD_POINT_LAYOUT.forEach((config) => {
+      this.buildPoints.push(new BuildPoint(this, config));
     });
 
     // Drop key input (D-10 -- spacebar and down arrow)
