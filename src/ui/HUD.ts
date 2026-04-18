@@ -10,7 +10,9 @@ export class HUD {
   private coinIcon: Phaser.GameObjects.Arc;
   private coinText: Phaser.GameObjects.Text;
   private dayText: Phaser.GameObjects.Text;
+  private warningText: Phaser.GameObjects.Text;
   private onEconomyChanged: (data: { coins: number; day: number }) => void;
+  private onNightWarning: () => void;
 
   constructor(scene: Phaser.Scene) {
     // Coin icon -- small gold circle at top-left
@@ -33,19 +35,47 @@ export class HUD {
       color: '#FFFFFF',
     }).setScrollFactor(0).setDepth(HUD_DEPTH).setOrigin(0, 0.3);
 
+    // Nightfall warning text -- centered, hidden by default
+    this.warningText = scene.add.text(
+      scene.scale.width / 2, 60,
+      'NIGHT APPROACHES',
+      {
+        fontFamily: '"Courier New", monospace',
+        fontSize: '18px',
+        color: '#FF4444',
+        fontStyle: 'bold',
+      }
+    ).setScrollFactor(0).setDepth(HUD_DEPTH).setOrigin(0.5, 0.5).setAlpha(0);
+
     // Listen for economy changes
     this.onEconomyChanged = (data: { coins: number; day: number }) => {
       this.coinText.setText(`${data.coins}`);
       this.dayText.setText(`Day ${data.day}`);
     };
     EventBus.on('economy:changed', this.onEconomyChanged);
+
+    // Listen for nightfall warning
+    this.onNightWarning = () => {
+      // Flash warning text 3 times over 3 seconds then fade out
+      scene.tweens.add({
+        targets: this.warningText,
+        alpha: { from: 0, to: 1 },
+        duration: 500,
+        yoyo: true,
+        repeat: 2,
+        onComplete: () => this.warningText.setAlpha(0),
+      });
+    };
+    EventBus.on('night:warning', this.onNightWarning);
   }
 
   /** Remove EventBus listeners and destroy game objects */
   destroy(): void {
     EventBus.off('economy:changed', this.onEconomyChanged);
+    EventBus.off('night:warning', this.onNightWarning);
     this.coinIcon.destroy();
     this.coinText.destroy();
     this.dayText.destroy();
+    this.warningText.destroy();
   }
 }
