@@ -67,8 +67,8 @@ Plans:
 **Plans**: 4 plans
 Plans:
 - [x] 03-01-PLAN.md -- Phase 3 constants, DayNightCycleManager, HUD warning, textures
-- [ ] 03-02-PLAN.md -- WaveManager, zombie pool, zombie AI (march/attack/die)
-- [ ] 03-03-PLAN.md -- Archer entity, arrow pool, NPCManager archer support
+- [x] 03-02-PLAN.md -- WaveManager, zombie pool, zombie AI (march/attack/die)
+- [x] 03-03-PLAN.md -- Archer entity, arrow pool, NPCManager archer support
 - [ ] 03-04-PLAN.md -- Game.ts full integration, visual checkpoint
 
 ### Phase 4: Combat & World Polish
