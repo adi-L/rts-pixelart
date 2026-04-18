@@ -66,7 +66,7 @@ Plans:
   5. An archer NPC stationed in a tower attacks incoming zombies automatically at night
 **Plans**: 4 plans
 Plans:
-- [ ] 03-01-PLAN.md -- Phase 3 constants, DayNightCycleManager, HUD warning, textures
+- [x] 03-01-PLAN.md -- Phase 3 constants, DayNightCycleManager, HUD warning, textures
 - [ ] 03-02-PLAN.md -- WaveManager, zombie pool, zombie AI (march/attack/die)
 - [ ] 03-03-PLAN.md -- Archer entity, arrow pool, NPCManager archer support
 - [ ] 03-04-PLAN.md -- Game.ts full integration, visual checkpoint
