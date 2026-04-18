@@ -239,6 +239,7 @@ export const COLOR_ZOMBIE = 0x2D8B2D;       // green per D-07
 export const COLOR_ZOMBIE_DARK = 0x1A5C1A;  // dark-green variant
 export const SPRITE_ZOMBIE = 'zombie';
 export const ZOMBIE_SPAWN_MARGIN = 50;      // px from world edge
+export const ZOMBIE_CONTACT_DISTANCE = 20;  // px for zombie-structure/NPC contact
 
 // Archer (per D-13, D-14, D-15)
 export const ARCHER_RANGE = 300;
