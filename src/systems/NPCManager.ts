@@ -20,6 +20,7 @@ export class NPCManager {
   public citizens: Citizen[] = [];
   public builders: BaseNPC[] = []; // Will be Builder instances from Plan 05
   public farmers: BaseNPC[] = [];  // Will be Farmer instances from Plan 05
+  public archers: BaseNPC[] = [];  // Will be Archer instances from Plan 03-03
 
   private respawnTimer: Phaser.Time.TimerEvent | null = null;
   private onArrivedAtBase: (data: { vagrant: Vagrant }) => void;
@@ -110,11 +111,12 @@ export class NPCManager {
     for (const c of this.citizens) c.update(time, delta);
     for (const b of this.builders) b.update(time, delta);
     for (const f of this.farmers) f.update(time, delta);
+    for (const a of this.archers) a.update(time, delta);
   }
 
   /** Get all NPC sprites for physics overlap registration */
   getAllNPCSprites(): (Phaser.GameObjects.Rectangle & { body: Phaser.Physics.Arcade.Body })[] {
-    const all: BaseNPC[] = [...this.vagrants, ...this.citizens, ...this.builders, ...this.farmers];
+    const all: BaseNPC[] = [...this.vagrants, ...this.citizens, ...this.builders, ...this.farmers, ...this.archers];
     return all.map(npc => npc.sprite);
   }
 
@@ -129,5 +131,7 @@ export class NPCManager {
     this.builders.length = 0;
     this.farmers.forEach(f => f.destroy());
     this.farmers.length = 0;
+    this.archers.forEach(a => a.destroy());
+    this.archers.length = 0;
   }
 }
