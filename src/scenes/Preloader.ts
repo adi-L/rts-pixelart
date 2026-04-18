@@ -1,5 +1,9 @@
 import { Scene } from 'phaser';
 import { createCoinTexture } from '../entities/Coin';
+import {
+  COLOR_ZOMBIE, NPC_WIDTH, NPC_HEIGHT, SPRITE_ZOMBIE,
+  COLOR_ACCENT, ARROW_WIDTH, ARROW_HEIGHT, SPRITE_ARROW
+} from '../constants';
 
 export class Preloader extends Scene
 {
@@ -49,6 +53,20 @@ export class Preloader extends Scene
         //  Move to the MainMenu. You could also swap this for a Scene Transition, such as a camera fade.
         // Generate procedural coin texture before entering the game
         createCoinTexture(this);
+
+        // Generate zombie texture (green rectangle)
+        const gfxZ = this.add.graphics();
+        gfxZ.fillStyle(COLOR_ZOMBIE, 1);
+        gfxZ.fillRect(0, 0, NPC_WIDTH, NPC_HEIGHT);
+        gfxZ.generateTexture(SPRITE_ZOMBIE, NPC_WIDTH, NPC_HEIGHT);
+        gfxZ.destroy();
+
+        // Generate arrow texture (small yellow line per D-15)
+        const gfxA = this.add.graphics();
+        gfxA.fillStyle(COLOR_ACCENT, 1);
+        gfxA.fillRect(0, 0, ARROW_WIDTH, ARROW_HEIGHT);
+        gfxA.generateTexture(SPRITE_ARROW, ARROW_WIDTH, ARROW_HEIGHT);
+        gfxA.destroy();
 
         this.scene.start('MainMenu');
     }

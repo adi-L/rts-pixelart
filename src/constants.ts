@@ -215,3 +215,42 @@ export const BUILD_POINT_LAYOUT: BuildPointConfig[] = [
   { id: 'bp-wall-L2', x: 2200, type: 'wall', unlockTier: 2 },
   { id: 'bp-wall-R2', x: 3800, type: 'wall', unlockTier: 2 },
 ];
+
+// ===== PHASE 3: Day/Night & Zombie Waves =====
+
+// Day/Night Cycle (per D-01, D-02, D-03)
+export const DAY_DURATION = 600000;         // 10 minutes in ms
+export const NIGHT_DURATION = 480000;       // 8 minutes in ms
+export const TRANSITION_DURATION = 12000;   // 12s overlay fade
+export const NIGHTFALL_WARNING_TIME = 20000; // 20s before nightfall
+export const OVERLAY_NIGHT_COLOR = 0x0a0a3a; // dark blue-purple
+export const OVERLAY_MAX_ALPHA = 0.55;
+export const OVERLAY_DEPTH = 50;            // below HUD_DEPTH (100)
+
+// Zombie (per D-05 through D-12, D-16, D-17)
+export const ZOMBIE_SPEED = 40;
+export const ZOMBIE_HP = 30;
+export const ZOMBIE_DAMAGE = 10;
+export const ZOMBIE_ATTACK_INTERVAL = 2000; // 2s between hits per D-06
+export const ZOMBIE_BASE_COUNT = 4;         // ~3-4 on night 1 per D-16
+export const ZOMBIE_GROWTH_PER_NIGHT = 2;   // add 2 per night per D-16
+export const ZOMBIE_POOL_SIZE = 40;
+export const COLOR_ZOMBIE = 0x2D8B2D;       // green per D-07
+export const COLOR_ZOMBIE_DARK = 0x1A5C1A;  // dark-green variant
+export const SPRITE_ZOMBIE = 'zombie';
+export const ZOMBIE_SPAWN_MARGIN = 50;      // px from world edge
+
+// Archer (per D-13, D-14, D-15)
+export const ARCHER_RANGE = 300;
+export const ARCHER_FIRE_RATE = 1500;       // 1.5s between shots
+export const ARROW_DAMAGE = 10;
+export const ARROW_SPEED = 400;
+export const ARROW_MAX_RANGE = 350;
+export const ARROW_POOL_SIZE = 15;
+export const ARCHER_HUNT_COIN_INTERVAL = 15000; // 1 coin per 15s
+export const ARCHER_WANDER_DISTANCE = 200;
+export const ARCHER_RETURN_SPEED = 120;
+export const COLOR_ARCHER = 0xCC6633;       // orange-brown
+export const SPRITE_ARROW = 'arrow';
+export const ARROW_WIDTH = 8;
+export const ARROW_HEIGHT = 2;
