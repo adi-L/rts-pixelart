@@ -10,6 +10,10 @@ import { Farmer } from '../entities/npc/Farmer';
 import { BuildPointState } from '../entities/BuildPoint';
 import EventBus from '../events/EventBus';
 import { BuildPoint } from '../entities/BuildPoint';
+import { DayNightCycleManager } from '../systems/DayNightCycleManager';
+import { WaveManager } from '../systems/WaveManager';
+import { Archer } from '../entities/npc/Archer';
+import { createArrowPool, deactivateArrow, updateArrows } from '../entities/Arrow';
 import {
   WORLD_WIDTH, WORLD_HEIGHT, GROUND_Y, GROUND_HEIGHT,
   GROUND_COLOR, GROUND_EDGE_COLOR, COLOR_SKY, COLOR_MID,
@@ -17,7 +21,7 @@ import {
   HERO_START_X, HERO_BODY_HEIGHT, PARALLAX_MID,
   COIN_INITIAL_SPAWN_COUNT, COIN_DROP_BOUNCE_DURATION,
   BUILD_POINT_DETECT_RADIUS, COIN_SIZE, COIN_SCALE, COLOR_ACCENT,
-  VAGRANT_RECRUIT_RADIUS, FARMER_WORK_RANGE
+  VAGRANT_RECRUIT_RADIUS, FARMER_WORK_RANGE, ARROW_DAMAGE
 } from '../constants';
 
 export class Game extends Scene {
@@ -32,6 +36,11 @@ export class Game extends Scene {
   private structureManager!: StructureManager;
   private npcManager!: NPCManager;
   private hud!: HUD;
+
+  // Phase 3 systems
+  private dayNightCycle!: DayNightCycleManager;
+  private waveManager!: WaveManager;
+  private arrowPool!: Phaser.Physics.Arcade.Group;
 
   // Role assignment listener references
   private onStructureBuilt!: (data: { buildPointId: string; type: string; x: number }) => void;
@@ -85,6 +94,11 @@ export class Game extends Scene {
     this.npcManager = new NPCManager(this, this.economy, this.structureManager);
     this.hud = new HUD(this);
 
+    // Phase 3 systems initialization
+    this.dayNightCycle = new DayNightCycleManager(this, this.economy);
+    this.waveManager = new WaveManager(this, this.structureManager, this.npcManager);
+    this.arrowPool = createArrowPool(this);
+
     // Coin collection overlap -- now routes through EconomyManager
     this.physics.add.overlap(
       this.hero.sprite,
@@ -94,6 +108,19 @@ export class Game extends Scene {
         if (!c.active) return;
         collectCoin(c, this.hero.sprite, this);
         this.economy.addCoins(1, 'pickup');
+      }
+    );
+
+    // Arrow-zombie overlap: arrows damage zombies on contact
+    this.physics.add.overlap(
+      this.arrowPool,
+      this.waveManager.pool,
+      (arrowObj, zombieObj) => {
+        const arrow = arrowObj as Phaser.Physics.Arcade.Sprite;
+        const zombie = zombieObj as Phaser.Physics.Arcade.Sprite;
+        if (!arrow.active || !zombie.active) return;
+        this.waveManager.damageZombie(zombie, ARROW_DAMAGE);
+        deactivateArrow(arrow);
       }
     );
 
@@ -110,6 +137,8 @@ export class Game extends Scene {
     this.onStructureBuilt = (data) => {
       if (data.type === 'hut') {
         this.assignCitizenAsBuilder(data.x);
+      } else if (data.type === 'tower') {
+        this.assignCitizenAsArcher(data.x);
       }
     };
     EventBus.on('structure:built', this.onStructureBuilt);
@@ -122,6 +151,10 @@ export class Game extends Scene {
       this.npcManager.destroy();
       this.structureManager.destroy();
       this.hud.destroy();
+      // Phase 3 cleanup
+      this.dayNightCycle.destroy();
+      this.waveManager.destroy();
+      this.arrowPool.destroy(true);
     });
   }
 
@@ -134,6 +167,11 @@ export class Game extends Scene {
 
     // Update all NPCs
     this.npcManager.update(time, delta);
+
+    // Phase 3 updates
+    this.dayNightCycle.update(delta);
+    this.waveManager.update(time, delta);
+    updateArrows(this.arrowPool);
 
     // Auto-assign citizens near unmanned farms to farmer role (D-04)
     this.checkFarmProximity();
@@ -343,6 +381,29 @@ export class Game extends Scene {
     const builder = new Builder(this, nearest.sprite.x, this.structureManager);
     builder.sprite.body.setVelocityX(0);
     this.npcManager.builders.push(builder);
+    nearest.destroy();
+  }
+
+  /** Convert the nearest idle citizen into an Archer at a tower (D-13) */
+  private assignCitizenAsArcher(towerX: number): void {
+    if (this.npcManager.citizens.length === 0) return;
+    let nearest = this.npcManager.citizens[0];
+    let minDist = Math.abs(nearest.sprite.x - towerX);
+    for (const c of this.npcManager.citizens) {
+      const dist = Math.abs(c.sprite.x - towerX);
+      if (dist < minDist) {
+        minDist = dist;
+        nearest = c;
+      }
+    }
+    const idx = this.npcManager.citizens.indexOf(nearest);
+    if (idx >= 0) this.npcManager.citizens.splice(idx, 1);
+    const archer = new Archer(
+      this, nearest.sprite.x, towerX,
+      this.arrowPool, this.economy,
+      () => this.waveManager.pool
+    );
+    this.npcManager.archers.push(archer);
     nearest.destroy();
   }
 
