@@ -112,7 +112,9 @@ export class Hero {
         this.sprite.x, this.sprite.y,
         pointer.worldX, pointer.worldY
       );
-      this.gunSprite.setPosition(this.sprite.x, this.sprite.y);
+      // Offset gun to hero's hand level (below sprite center)
+      const gunY = this.sprite.y + (SPRITE_HERO_FRAME_HEIGHT * HERO_SCALE * 0.15);
+      this.gunSprite.setPosition(this.sprite.x, gunY);
       this.gunSprite.setRotation(angle);
 
       // Flip gun when aiming left to prevent visual inversion
@@ -130,7 +132,8 @@ export class Hero {
     if (!this.hasGun || this.ammo <= 0 || time - this.lastFireTime < HERO_FIRE_RATE) return;
     const pointer = this.scene.input.activePointer;
     pointer.updateWorldPoint(this.scene.cameras.main);
-    fireBullet(bulletPool, this.sprite.x, this.sprite.y, pointer.worldX, pointer.worldY, this.scene);
+    const gunY = this.sprite.y + (SPRITE_HERO_FRAME_HEIGHT * HERO_SCALE * 0.15);
+    fireBullet(bulletPool, this.sprite.x, gunY, pointer.worldX, pointer.worldY, this.scene);
     this.ammo--;
     this.lastFireTime = time;
     EventBus.emit('hero:ammo-changed', { ammo: this.ammo, maxAmmo: AMMO_CLIP_SIZE });
