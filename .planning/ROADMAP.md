@@ -72,14 +72,18 @@ Plans:
 - [ ] 03-04-PLAN.md -- Game.ts full integration, visual checkpoint
 
 ### Phase 4: Combat & World Polish
-**Goal**: The hero can fight, the world is explorable, and the game is a complete playable skirmish
+**Goal**: The hero can fight with a mouse-aimed gun, the world expands to 20,000px with exploration zones, and the game is a complete playable skirmish
 **Depends on**: Phase 3
 **Requirements**: HERO-03, HERO-04, MAP-03
 **Success Criteria** (what must be TRUE):
   1. Hero can pick up a weapon found in the world (or dropped by a zombie)
   2. Hero attacks zombies with the equipped weapon and the zombie takes damage
   3. A complete hand-crafted skirmish map exists with balanced build points, coin sources, and zombie spawn edges
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 04-01-PLAN.md -- Bullet entity, Gunner NPC, Armory structure, all Phase 4 constants, world expansion to 20,000px
+- [ ] 04-02-PLAN.md -- Hero combat (gun sprite, HP, mouse aim, shooting, ammo), HUD health bar + ammo, zombie knockback
+- [ ] 04-03-PLAN.md -- Game.ts full integration, system updates (NPCManager, StructureManager), exploration zones, visual checkpoint
 
 ## Progress
 
@@ -91,4 +95,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Foundation & Hero Loop | 3/3 | Complete | - |
 | 2. Citizen Economy & Structures | 4/5 | In Progress|  |
 | 3. Day/Night & Zombie Waves | 0/4 | Not started | - |
-| 4. Combat & World Polish | 0/TBD | Not started | - |
+| 4. Combat & World Polish | 0/3 | Not started | - |
