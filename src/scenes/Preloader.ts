@@ -2,7 +2,7 @@ import { Scene } from 'phaser';
 import { createCoinTexture } from '../entities/Coin';
 import {
   COLOR_ZOMBIE, NPC_WIDTH, NPC_HEIGHT, SPRITE_ZOMBIE,
-  COLOR_ACCENT, ARROW_WIDTH, ARROW_HEIGHT, SPRITE_ARROW
+  BULLET_WIDTH, BULLET_HEIGHT, BULLET_COLOR, SPRITE_BULLET
 } from '../constants';
 
 export class Preloader extends Scene
@@ -61,12 +61,12 @@ export class Preloader extends Scene
         gfxZ.generateTexture(SPRITE_ZOMBIE, NPC_WIDTH, NPC_HEIGHT);
         gfxZ.destroy();
 
-        // Generate arrow texture (small yellow line per D-15)
-        const gfxA = this.add.graphics();
-        gfxA.fillStyle(COLOR_ACCENT, 1);
-        gfxA.fillRect(0, 0, ARROW_WIDTH, ARROW_HEIGHT);
-        gfxA.generateTexture(SPRITE_ARROW, ARROW_WIDTH, ARROW_HEIGHT);
-        gfxA.destroy();
+        // Generate bullet texture (small gray rectangle per D-06)
+        const gfxB = this.add.graphics();
+        gfxB.fillStyle(BULLET_COLOR, 1);
+        gfxB.fillRect(0, 0, BULLET_WIDTH, BULLET_HEIGHT);
+        gfxB.generateTexture(SPRITE_BULLET, BULLET_WIDTH, BULLET_HEIGHT);
+        gfxB.destroy();
 
         this.scene.start('MainMenu');
     }
