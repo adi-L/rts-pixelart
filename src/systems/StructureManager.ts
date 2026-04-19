@@ -7,9 +7,11 @@ import { Tower } from '../entities/structures/Tower';
 import { Farm } from '../entities/structures/Farm';
 import { BuilderHut } from '../entities/structures/BuilderHut';
 import { BaseStructure } from '../entities/structures/BaseStructure';
+import { Armory } from '../entities/structures/Armory';
 import {
   BUILD_POINT_LAYOUT, BUILD_POINT_DETECT_RADIUS,
   BASE_UPGRADE_COST_1, BASE_UPGRADE_COST_2, BASE_UPGRADE_COST_3,
+  HERO_START_X,
 } from '../constants';
 import type { BuildPointType } from '../constants';
 
@@ -27,7 +29,7 @@ export class StructureManager {
     this.scene = scene;
 
     // Create main base at world center
-    this.mainBase = new MainBase(scene, 3000);
+    this.mainBase = new MainBase(scene, HERO_START_X);
 
     // Create build points from layout
     for (const config of BUILD_POINT_LAYOUT) {
@@ -108,6 +110,9 @@ export class StructureManager {
         break;
       case 'hut':
         structure = new BuilderHut(this.scene, bp.x, bp.id);
+        break;
+      case 'armory':
+        structure = new Armory(this.scene, bp.x, bp.id);
         break;
       default:
         return;

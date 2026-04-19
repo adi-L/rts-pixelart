@@ -7,6 +7,7 @@ import {
   BASE_UPGRADE_COST_2, BASE_UPGRADE_COST_3,
   FLAG_POLE_WIDTH, FLAG_POLE_HEIGHT, FLAG_BANNER_WIDTH, FLAG_BANNER_HEIGHT,
   FLAG_POLE_COLOR, FLAG_COLORS,
+  ARMORY_COST, RUIN_REPAIR_COST,
 } from '../constants';
 import type { BuildPointType, BuildPointConfig } from '../constants';
 import type { BaseStructure } from './structures/BaseStructure';
@@ -139,6 +140,8 @@ export class BuildPoint {
       case 'tower': return TOWER_COST;
       case 'farm': return FARM_COST;
       case 'hut': return BUILDER_HUT_COST;
+      case 'armory': return ARMORY_COST;
+      case 'ruin': return RUIN_REPAIR_COST;
       case 'base':
         if (this.coinsDeposited === 0) return BASE_UPGRADE_COST_1;
         if (this.coinsDeposited < BASE_UPGRADE_COST_1 + BASE_UPGRADE_COST_2) return BASE_UPGRADE_COST_2;

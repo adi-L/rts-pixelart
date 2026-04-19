@@ -6,6 +6,7 @@ import { BaseNPC } from '../entities/npc/BaseNPC';
 import {
   VAGRANT_INITIAL_COUNT, VAGRANT_RESPAWN_INTERVAL,
   VAGRANT_RECRUIT_RADIUS, WORLD_WIDTH,
+  HERO_START_X, VAGRANT_CAMPS,
 } from '../constants';
 import type { EconomyManager } from './EconomyManager';
 import type { StructureManager } from './StructureManager';
@@ -20,12 +21,12 @@ export class NPCManager {
   public citizens: Citizen[] = [];
   public builders: BaseNPC[] = []; // Will be Builder instances from Plan 05
   public farmers: BaseNPC[] = [];  // Will be Farmer instances from Plan 05
-  public archers: BaseNPC[] = [];  // Will be Archer instances from Plan 03-03
+  public gunners: BaseNPC[] = [];  // Gunner instances
 
   private respawnTimer: Phaser.Time.TimerEvent | null = null;
   private onArrivedAtBase: (data: { vagrant: Vagrant }) => void;
 
-  private readonly baseX: number = 3000;
+  private readonly baseX: number = HERO_START_X;
 
   constructor(
     scene: Phaser.Scene,
@@ -56,10 +57,10 @@ export class NPCManager {
   private spawnInitialVagrants(): void {
     // Scatter 4 vagrants across the map, biased toward edges per D-02
     const positions = [
-      Phaser.Math.Between(400, 800),    // left edge area
-      Phaser.Math.Between(500, 1000),   // left-center
-      Phaser.Math.Between(5000, 5600),  // right-center
-      Phaser.Math.Between(5200, 5800),  // right edge area
+      Phaser.Math.Between(800, 1600),
+      Phaser.Math.Between(2000, 3000),
+      Phaser.Math.Between(17000, 18000),
+      Phaser.Math.Between(18400, 19200),
     ];
     for (let i = 0; i < VAGRANT_INITIAL_COUNT && i < positions.length; i++) {
       const vagrant = new Vagrant(this.scene, positions[i], this.baseX);
@@ -75,6 +76,17 @@ export class NPCManager {
       : Phaser.Math.Between(WORLD_WIDTH - 600, WORLD_WIDTH - 200);
     const vagrant = new Vagrant(this.scene, x, this.baseX);
     this.vagrants.push(vagrant);
+  }
+
+  /** Spawn vagrants at predefined camp locations in exploration zones */
+  spawnVagrantCamps(): void {
+    for (const camp of VAGRANT_CAMPS) {
+      for (let i = 0; i < camp.count; i++) {
+        const x = camp.x + Phaser.Math.Between(-60, 60);
+        const vagrant = new Vagrant(this.scene, x, this.baseX);
+        this.vagrants.push(vagrant);
+      }
+    }
   }
 
   /** Try to recruit the nearest vagrant to heroX. Returns true if successful. */
@@ -111,12 +123,12 @@ export class NPCManager {
     for (const c of this.citizens) c.update(time, delta);
     for (const b of this.builders) b.update(time, delta);
     for (const f of this.farmers) f.update(time, delta);
-    for (const a of this.archers) a.update(time, delta);
+    for (const g of this.gunners) g.update(time, delta);
   }
 
   /** Get all NPC sprites for physics overlap registration */
   getAllNPCSprites(): (Phaser.GameObjects.Rectangle & { body: Phaser.Physics.Arcade.Body })[] {
-    const all: BaseNPC[] = [...this.vagrants, ...this.citizens, ...this.builders, ...this.farmers, ...this.archers];
+    const all: BaseNPC[] = [...this.vagrants, ...this.citizens, ...this.builders, ...this.farmers, ...this.gunners];
     return all.map(npc => npc.sprite);
   }
 
@@ -131,7 +143,7 @@ export class NPCManager {
     this.builders.length = 0;
     this.farmers.forEach(f => f.destroy());
     this.farmers.length = 0;
-    this.archers.forEach(a => a.destroy());
-    this.archers.length = 0;
+    this.gunners.forEach(g => g.destroy());
+    this.gunners.length = 0;
   }
 }

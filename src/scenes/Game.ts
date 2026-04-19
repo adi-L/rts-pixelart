@@ -7,13 +7,13 @@ import { NPCManager } from '../systems/NPCManager';
 import { HUD } from '../ui/HUD';
 import { Builder } from '../entities/npc/Builder';
 import { Farmer } from '../entities/npc/Farmer';
+import { Gunner } from '../entities/npc/Gunner';
 import { BuildPointState } from '../entities/BuildPoint';
 import EventBus from '../events/EventBus';
 import { BuildPoint } from '../entities/BuildPoint';
 import { DayNightCycleManager } from '../systems/DayNightCycleManager';
 import { WaveManager } from '../systems/WaveManager';
-import { Archer } from '../entities/npc/Archer';
-import { createArrowPool, deactivateArrow, updateArrows } from '../entities/Arrow';
+import { createBulletPool, deactivateBullet, updateBullets } from '../entities/Bullet';
 import {
   WORLD_WIDTH, WORLD_HEIGHT, GROUND_Y, GROUND_HEIGHT,
   GROUND_COLOR, GROUND_EDGE_COLOR, COLOR_SKY, COLOR_MID,
@@ -21,7 +21,9 @@ import {
   HERO_START_X, HERO_BODY_HEIGHT, PARALLAX_MID,
   COIN_INITIAL_SPAWN_COUNT, COIN_DROP_BOUNCE_DURATION,
   BUILD_POINT_DETECT_RADIUS, COIN_SIZE, COIN_SCALE, COLOR_ACCENT,
-  VAGRANT_RECRUIT_RADIUS, FARMER_WORK_RANGE, ARROW_DAMAGE
+  VAGRANT_RECRUIT_RADIUS, FARMER_WORK_RANGE,
+  BULLET_DAMAGE, ZOMBIE_DAMAGE_TO_HERO, AMMO_RESTOCK_COST, AMMO_CLIP_SIZE,
+  COIN_CACHES
 } from '../constants';
 
 export class Game extends Scene {
@@ -40,10 +42,15 @@ export class Game extends Scene {
   // Phase 3 systems
   private dayNightCycle!: DayNightCycleManager;
   private waveManager!: WaveManager;
-  private arrowPool!: Phaser.Physics.Arcade.Group;
+
+  // Phase 4 systems
+  private bulletPool!: Phaser.Physics.Arcade.Group;
 
   // Role assignment listener references
   private onStructureBuilt!: (data: { buildPointId: string; type: string; x: number }) => void;
+
+  // Hero death listener reference
+  private onHeroDied!: () => void;
 
   // Coin deposit channel state
   private activeDeposit: {
@@ -88,16 +95,29 @@ export class Game extends Scene {
       spawnCoin(this.coinPool, cx, GROUND_Y - COIN_SIZE * COIN_SCALE / 2, this);
     }
 
+    // Exploration zone coin caches (per D-18)
+    for (const cache of COIN_CACHES) {
+      for (let i = 0; i < cache.coins; i++) {
+        const cx = cache.x + Phaser.Math.Between(-30, 30);
+        spawnCoin(this.coinPool, cx, GROUND_Y - COIN_SIZE * COIN_SCALE / 2, this);
+      }
+    }
+
     // Phase 2 systems initialization
     this.economy = new EconomyManager();
     this.structureManager = new StructureManager(this);
     this.npcManager = new NPCManager(this, this.economy, this.structureManager);
     this.hud = new HUD(this);
 
+    // Spawn vagrant camps in exploration zones
+    this.npcManager.spawnVagrantCamps();
+
     // Phase 3 systems initialization
     this.dayNightCycle = new DayNightCycleManager(this, this.economy);
     this.waveManager = new WaveManager(this, this.structureManager, this.npcManager);
-    this.arrowPool = createArrowPool(this);
+
+    // Phase 4: Bullet pool
+    this.bulletPool = createBulletPool(this);
 
     // Coin collection overlap -- now routes through EconomyManager
     this.physics.add.overlap(
@@ -111,18 +131,36 @@ export class Game extends Scene {
       }
     );
 
-    // Arrow-zombie overlap: arrows damage zombies on contact
+    // Bullet-zombie overlap: bullets damage zombies on contact
     this.physics.add.overlap(
-      this.arrowPool,
+      this.bulletPool,
       this.waveManager.pool,
-      (arrowObj, zombieObj) => {
-        const arrow = arrowObj as Phaser.Physics.Arcade.Sprite;
+      (bulletObj, zombieObj) => {
+        const bullet = bulletObj as Phaser.Physics.Arcade.Sprite;
         const zombie = zombieObj as Phaser.Physics.Arcade.Sprite;
-        if (!arrow.active || !zombie.active) return;
-        this.waveManager.damageZombie(zombie, ARROW_DAMAGE);
-        deactivateArrow(arrow);
+        if (!bullet.active || !zombie.active) return;
+        this.waveManager.damageZombie(zombie, BULLET_DAMAGE, bullet.x);
+        deactivateBullet(bullet);
       }
     );
+
+    // Zombie-hero overlap: zombies damage the hero on contact
+    this.physics.add.overlap(
+      this.hero.sprite,
+      this.waveManager.pool,
+      (_heroSprite, zombieObj) => {
+        const zombie = zombieObj as Phaser.Physics.Arcade.Sprite;
+        if (!zombie.active) return;
+        this.hero.takeDamage(ZOMBIE_DAMAGE_TO_HERO);
+      }
+    );
+
+    // Mouse click handler for shooting
+    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      if (pointer.leftButtonDown()) {
+        this.hero.shoot(this.bulletPool, this.time.now);
+      }
+    });
 
     // Drop key input
     this.dropKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
@@ -133,28 +171,39 @@ export class Game extends Scene {
     this.cameras.main.startFollow(this.hero.sprite, true, CAMERA_LERP, CAMERA_LERP);
     this.cameras.main.setDeadzone(CAMERA_DEADZONE_WIDTH, 0);
 
-    // Role assignment: when a builder hut is built, convert nearest citizen to builder
+    // Role assignment: when a structure is built, convert nearest citizen to appropriate role
     this.onStructureBuilt = (data) => {
       if (data.type === 'hut') {
         this.assignCitizenAsBuilder(data.x);
       } else if (data.type === 'tower') {
-        this.assignCitizenAsArcher(data.x);
+        this.assignCitizenAsGunner(data.x);
+      } else if (data.type === 'armory') {
+        this.hero.grantGun();
       }
     };
     EventBus.on('structure:built', this.onStructureBuilt);
+
+    // Hero death listener -- game over
+    this.onHeroDied = () => {
+      this.scene.start('GameOver');
+    };
+    EventBus.on('hero:died', this.onHeroDied);
 
     // Clean shutdown
     this.events.once('shutdown', () => {
       if (this.activeDeposit) this.cancelDeposit();
       EventBus.off('structure:built', this.onStructureBuilt);
+      EventBus.off('hero:died', this.onHeroDied);
       EventBus.removeAllListeners();
       this.npcManager.destroy();
       this.structureManager.destroy();
       this.hud.destroy();
+      this.hero.destroy();
       // Phase 3 cleanup
       this.dayNightCycle.destroy();
       this.waveManager.destroy();
-      this.arrowPool.destroy(true);
+      // Phase 4 cleanup
+      this.bulletPool.destroy(true);
     });
   }
 
@@ -171,7 +220,9 @@ export class Game extends Scene {
     // Phase 3 updates
     this.dayNightCycle.update(delta);
     this.waveManager.update(time, delta);
-    updateArrows(this.arrowPool);
+
+    // Phase 4: update bullets
+    updateBullets(this.bulletPool);
 
     // Auto-assign citizens near unmanned farms to farmer role (D-04)
     this.checkFarmProximity();
@@ -206,6 +257,19 @@ export class Game extends Scene {
       }
     }
 
+    // Priority 1.5: Restock ammo at armory
+    if (this.hero.armed && this.hero.currentAmmo < AMMO_CLIP_SIZE) {
+      const armoryBp = this.structureManager.buildPoints.find(
+        bp => bp.type === 'armory' &&
+              bp.state === BuildPointState.Complete &&
+              Math.abs(heroX - bp.x) <= BUILD_POINT_DETECT_RADIUS
+      );
+      if (armoryBp && this.economy.spendCoins(AMMO_RESTOCK_COST)) {
+        this.hero.restockAmmo();
+        return;
+      }
+    }
+
     // Priority 2: Start deposit channel at nearby build point
     const nearBp = this.structureManager.buildPoints.find(
       bp => Math.abs(heroX - bp.x) <= BUILD_POINT_DETECT_RADIUS &&
@@ -219,7 +283,7 @@ export class Game extends Scene {
         this.startDeposit(nearBp, cost);
         return;
       } else {
-        // Can't afford — red flash + coins fall
+        // Can't afford -- red flash + coins fall
         this.hero.sprite.setTint(0xff0000);
         this.time.delayedCall(100, () => this.hero.sprite.clearTint());
         const showCount = Math.max(1, this.economy.coins || 1);
@@ -307,7 +371,7 @@ export class Game extends Scene {
     });
   }
 
-  /** All coins deposited — fund the build point and build structure immediately */
+  /** All coins deposited -- fund the build point and build structure immediately */
   private completeDeposit(): void {
     if (!this.activeDeposit) return;
     const dep = this.activeDeposit;
@@ -336,7 +400,7 @@ export class Game extends Scene {
     this.activeDeposit = null;
   }
 
-  /** Hero walked away — refund coins and animate them falling */
+  /** Hero walked away -- refund coins and animate them falling */
   private cancelDeposit(): void {
     if (!this.activeDeposit) return;
     const dep = this.activeDeposit;
@@ -384,8 +448,8 @@ export class Game extends Scene {
     nearest.destroy();
   }
 
-  /** Convert the nearest idle citizen into an Archer at a tower (D-13) */
-  private assignCitizenAsArcher(towerX: number): void {
+  /** Convert the nearest idle citizen into a Gunner at a tower */
+  private assignCitizenAsGunner(towerX: number): void {
     if (this.npcManager.citizens.length === 0) return;
     let nearest = this.npcManager.citizens[0];
     let minDist = Math.abs(nearest.sprite.x - towerX);
@@ -398,12 +462,12 @@ export class Game extends Scene {
     }
     const idx = this.npcManager.citizens.indexOf(nearest);
     if (idx >= 0) this.npcManager.citizens.splice(idx, 1);
-    const archer = new Archer(
+    const gunner = new Gunner(
       this, nearest.sprite.x, towerX,
-      this.arrowPool, this.economy,
+      this.bulletPool, this.economy,
       () => this.waveManager.pool
     );
-    this.npcManager.archers.push(archer);
+    this.npcManager.gunners.push(gunner);
     nearest.destroy();
   }
 
