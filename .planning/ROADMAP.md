@@ -81,7 +81,7 @@ Plans:
   3. A complete hand-crafted skirmish map exists with balanced build points, coin sources, and zombie spawn edges
 **Plans**: 3 plans
 Plans:
-- [ ] 04-01-PLAN.md -- Bullet entity, Gunner NPC, Armory structure, all Phase 4 constants, world expansion to 20,000px
+- [x] 04-01-PLAN.md -- Bullet entity, Gunner NPC, Armory structure, all Phase 4 constants, world expansion to 20,000px
 - [ ] 04-02-PLAN.md -- Hero combat (gun sprite, HP, mouse aim, shooting, ammo), HUD health bar + ammo, zombie knockback
 - [ ] 04-03-PLAN.md -- Game.ts full integration, system updates (NPCManager, StructureManager), exploration zones, visual checkpoint
 

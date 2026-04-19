@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Phase 4 context gathered
-last_updated: "2026-04-19T03:43:21.624Z"
-last_activity: 2026-04-18 -- Phase 03 execution started
+last_updated: "2026-04-19T05:10:54.258Z"
+last_activity: 2026-04-19 -- Phase 04 execution started
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 12
+  total_plans: 15
   completed_plans: 12
-  percent: 100
+  percent: 80
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** The coin-drop mechanic — everything in the game is triggered by the hero moving to a location and dropping coins. No menus, no direct unit control. Move, collect, drop, survive.
-**Current focus:** Phase 03 — day-night-zombie-waves
+**Current focus:** Phase 04 — combat-world-polish
 
 ## Current Position
 
-Phase: 03 (day-night-zombie-waves) — EXECUTING
-Plan: 1 of 4
-Status: Executing Phase 03
-Last activity: 2026-04-18 -- Phase 03 execution started
+Phase: 04 (combat-world-polish) — EXECUTING
+Plan: 1 of 3
+Status: Executing Phase 04
+Last activity: 2026-04-19 -- Phase 04 execution started
 
 Progress: [████████░░] 80%
 
