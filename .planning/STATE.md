@@ -5,7 +5,7 @@ milestone_name: milestone
 status: executing
 stopped_at: Phase 4 context gathered
 last_updated: "2026-04-19T05:10:54.258Z"
-last_activity: 2026-04-19 -- Phase 04 execution started
+last_activity: 2026-04-19 -- Completed quick task 260418-wxa: Fix gun sprite position
 progress:
   total_phases: 4
   completed_phases: 3
@@ -72,6 +72,12 @@ None yet.
 ### Blockers/Concerns
 
 - Existing RTS code (Unit state machine, Building/MainBase, ResourceNode) assumes top-down perspective — Phase 1 must establish clean side-scrolling scaffolding before any of it is touched.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260418-wxa | Fix gun sprite position above hero | 2026-04-19 | 5628206 | [260418-wxa-gun-is-above-the-hero-looks-no-good](./quick/260418-wxa-gun-is-above-the-hero-looks-no-good/) |
 
 ## Deferred Items
 
