@@ -8,7 +8,8 @@ import {
   ZOMBIE_SPEED, ZOMBIE_HP, ZOMBIE_DAMAGE, ZOMBIE_ATTACK_INTERVAL,
   ZOMBIE_BASE_COUNT, ZOMBIE_GROWTH_PER_NIGHT, ZOMBIE_POOL_SIZE,
   ZOMBIE_SPAWN_MARGIN, ZOMBIE_CONTACT_DISTANCE, WORLD_WIDTH,
-  NPC_WIDTH, NPC_HEIGHT, GROUND_Y, SPRITE_ZOMBIE, NIGHT_DURATION
+  NPC_WIDTH, NPC_HEIGHT, GROUND_Y, SPRITE_ZOMBIE, NIGHT_DURATION,
+  ZOMBIE_KNOCKBACK_SPEED, ZOMBIE_KNOCKBACK_DURATION
 } from '../constants';
 
 export class WaveManager {
@@ -246,10 +247,23 @@ export class WaveManager {
   // Damage / kill
   // ---------------------------------------------------------------------------
 
-  /** Called from arrow-zombie overlap in Game.ts */
-  damageZombie(zombie: Phaser.Physics.Arcade.Sprite, damage: number): void {
+  /** Called from bullet/arrow-zombie overlap in Game.ts */
+  damageZombie(zombie: Phaser.Physics.Arcade.Sprite, damage: number, bulletX?: number): void {
     const hp = (zombie.getData('hp') as number) - damage;
     zombie.setData('hp', hp);
+
+    // Apply knockback if bullet position provided (per D-08)
+    if (bulletX !== undefined && hp > 0) {
+      const dir = zombie.x > bulletX ? 1 : -1;
+      const body = zombie.body as Phaser.Physics.Arcade.Body;
+      body.setVelocityX(dir * ZOMBIE_KNOCKBACK_SPEED);
+      this.scene.time.delayedCall(ZOMBIE_KNOCKBACK_DURATION, () => {
+        if (zombie.active && zombie.getData('state') !== ZombieState.Dying) {
+          this.setMarchVelocity(zombie, this.findNearestStructure(zombie.x));
+        }
+      });
+    }
+
     if (hp <= 0) {
       this.killZombie(zombie);
     }
