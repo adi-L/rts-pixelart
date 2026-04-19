@@ -1,5 +1,5 @@
 // World
-export const WORLD_WIDTH = 6000;
+export const WORLD_WIDTH = 20000;
 export const WORLD_HEIGHT = 768;
 export const GROUND_Y = 600;
 export const GROUND_HEIGHT = 168;
@@ -17,7 +17,7 @@ export const HERO_SPEED = 300;
 export const HERO_SCALE = 2;
 export const HERO_BODY_WIDTH = 24;
 export const HERO_BODY_HEIGHT = 48;
-export const HERO_START_X = 3000;
+export const HERO_START_X = 10000;
 export const HERO_IDLE_FRAMES_START = 0;
 export const HERO_IDLE_FRAMES_END = 5;
 export const HERO_IDLE_FPS = 8;
@@ -47,7 +47,7 @@ export const BUILD_POINT_IDLE_ALPHA_MAX = 0.7;
 export const BUILD_POINT_ACTIVE_ALPHA_MIN = 0.7;
 export const BUILD_POINT_ACTIVE_ALPHA_MAX = 1.0;
 export const BUILD_POINT_PULSE_DURATION = 1000;
-export const BUILD_POINT_POSITIONS = [3000]; // Base camp at world center
+export const BUILD_POINT_POSITIONS = [10000]; // Base camp at world center
 
 // Parallax scroll factors
 export const PARALLAX_SKY = 0.0;
@@ -191,10 +191,12 @@ export const FLAG_COLORS: Record<string, number> = {
   tower: 0x4A6B8A,  // blue-gray
   hut: 0x7A5C3E,    // wood brown
   farm: 0x2D5A27,   // green
+  armory: 0x8888CC,  // blue-purple
+  ruin: 0x555555,    // gray
 };
 
 // Build Point Layout (symmetric around x=3000)
-export type BuildPointType = 'base' | 'wall' | 'tower' | 'hut' | 'farm';
+export type BuildPointType = 'base' | 'wall' | 'tower' | 'hut' | 'farm' | 'armory' | 'ruin';
 
 export interface BuildPointConfig {
   id: string;
@@ -204,16 +206,44 @@ export interface BuildPointConfig {
 }
 
 export const BUILD_POINT_LAYOUT: BuildPointConfig[] = [
-  { id: 'bp-base', x: 3000, type: 'base', unlockTier: 0 },
-  { id: 'bp-wall-L1', x: 2600, type: 'wall', unlockTier: 0 },
-  { id: 'bp-wall-R1', x: 3400, type: 'wall', unlockTier: 0 },
-  { id: 'bp-tower-L1', x: 2500, type: 'tower', unlockTier: 2 },
-  { id: 'bp-tower-R1', x: 3500, type: 'tower', unlockTier: 2 },
-  { id: 'bp-hut', x: 2900, type: 'hut', unlockTier: 2 },
-  { id: 'bp-farm-L1', x: 2700, type: 'farm', unlockTier: 3 },
-  { id: 'bp-farm-R1', x: 3300, type: 'farm', unlockTier: 3 },
-  { id: 'bp-wall-L2', x: 2200, type: 'wall', unlockTier: 2 },
-  { id: 'bp-wall-R2', x: 3800, type: 'wall', unlockTier: 2 },
+  // === Base (center) ===
+  { id: 'bp-base', x: 10000, type: 'base', unlockTier: 0 },
+
+  // === Inner defense ring (tier 0, ~1000px from center) ===
+  { id: 'bp-wall-L1', x: 9400, type: 'wall', unlockTier: 0 },
+  { id: 'bp-wall-R1', x: 10600, type: 'wall', unlockTier: 0 },
+
+  // === Builder hut + farms near base (tier 2-3) ===
+  { id: 'bp-hut', x: 9800, type: 'hut', unlockTier: 2 },
+  { id: 'bp-farm-L1', x: 9600, type: 'farm', unlockTier: 3 },
+  { id: 'bp-farm-R1', x: 10400, type: 'farm', unlockTier: 3 },
+
+  // === Tower positions inner (tier 2) ===
+  { id: 'bp-tower-L1', x: 9200, type: 'tower', unlockTier: 2 },
+  { id: 'bp-tower-R1', x: 10800, type: 'tower', unlockTier: 2 },
+
+  // === Mid defense ring (~2500px from center, tier 2) ===
+  { id: 'bp-wall-L2', x: 7800, type: 'wall', unlockTier: 2 },
+  { id: 'bp-wall-R2', x: 12200, type: 'wall', unlockTier: 2 },
+  { id: 'bp-tower-L2', x: 7600, type: 'tower', unlockTier: 2 },
+  { id: 'bp-tower-R2', x: 12400, type: 'tower', unlockTier: 2 },
+  { id: 'bp-farm-L2', x: 8200, type: 'farm', unlockTier: 3 },
+  { id: 'bp-farm-R2', x: 11800, type: 'farm', unlockTier: 3 },
+
+  // === Outer defense ring (~4000px from center, tier 3) ===
+  { id: 'bp-wall-L3', x: 6200, type: 'wall', unlockTier: 3 },
+  { id: 'bp-wall-R3', x: 13800, type: 'wall', unlockTier: 3 },
+  { id: 'bp-tower-L3', x: 6000, type: 'tower', unlockTier: 3 },
+  { id: 'bp-tower-R3', x: 14000, type: 'tower', unlockTier: 3 },
+
+  // === Armory (tier 3, near base per D-01) ===
+  { id: 'bp-armory', x: 10200, type: 'armory', unlockTier: 3 },
+
+  // === Exploration zone structures (ruins, per D-18) ===
+  { id: 'bp-ruin-L1', x: 4500, type: 'ruin', unlockTier: 0 },
+  { id: 'bp-ruin-L2', x: 2500, type: 'ruin', unlockTier: 0 },
+  { id: 'bp-ruin-R1', x: 15500, type: 'ruin', unlockTier: 0 },
+  { id: 'bp-ruin-R2', x: 17500, type: 'ruin', unlockTier: 0 },
 ];
 
 // ===== PHASE 3: Day/Night & Zombie Waves =====
@@ -255,3 +285,78 @@ export const COLOR_ARCHER = 0xCC6633;       // orange-brown
 export const SPRITE_ARROW = 'arrow';
 export const ARROW_WIDTH = 8;
 export const ARROW_HEIGHT = 2;
+
+// ===== PHASE 4: Combat & World Polish =====
+
+// Hero Combat (per D-12, D-15)
+export const HERO_HP = 100;
+export const HERO_INVINCIBILITY_MS = 1000;
+export const HERO_FIRE_RATE = 300;
+export const AMMO_CLIP_SIZE = 12;
+export const AMMO_RESTOCK_COST = 2;
+export const ZOMBIE_DAMAGE_TO_HERO = 15;
+
+// Bullet (per D-06, D-07, replacing Arrow)
+export const BULLET_SPEED = 500;
+export const BULLET_DAMAGE = 15;
+export const BULLET_MAX_RANGE = 400;
+export const BULLET_POOL_SIZE = 40;
+export const SPRITE_BULLET = 'bullet';
+export const BULLET_WIDTH = 6;
+export const BULLET_HEIGHT = 3;
+export const BULLET_COLOR = 0xCCCCCC;
+
+// Gun Sprite (per D-05)
+export const GUN_SPRITE_WIDTH = 16;
+export const GUN_SPRITE_HEIGHT = 4;
+export const GUN_COLOR = 0xCCCCCC;
+
+// Armory (per D-01, D-03)
+export const ARMORY_WIDTH = 48;
+export const ARMORY_HEIGHT = 48;
+export const ARMORY_HP = 80;
+export const COLOR_ARMORY = 0x8888CC;
+export const ARMORY_COST = 8;
+
+// Zombie Knockback (per D-08)
+export const ZOMBIE_KNOCKBACK_SPEED = 150;
+export const ZOMBIE_KNOCKBACK_DURATION = 200;
+
+// Gunner (per D-09, replacing Archer concept)
+export const COLOR_GUNNER = 0xCC6633;
+export const GUNNER_RANGE = 300;
+export const GUNNER_FIRE_RATE = 1500;
+
+// Exploration zones (beyond ~5000px from center on each side)
+export interface CoinCacheConfig {
+  id: string;
+  x: number;
+  coins: number;
+}
+export const COIN_CACHES: CoinCacheConfig[] = [
+  { id: 'cache-L1', x: 5000, coins: 8 },
+  { id: 'cache-L2', x: 3500, coins: 6 },
+  { id: 'cache-L3', x: 1500, coins: 10 },
+  { id: 'cache-R1', x: 15000, coins: 8 },
+  { id: 'cache-R2', x: 16500, coins: 6 },
+  { id: 'cache-R3', x: 18500, coins: 10 },
+];
+
+export interface VagrantCampConfig {
+  id: string;
+  x: number;
+  count: number;
+}
+export const VAGRANT_CAMPS: VagrantCampConfig[] = [
+  { id: 'camp-L1', x: 4000, count: 2 },
+  { id: 'camp-L2', x: 1800, count: 3 },
+  { id: 'camp-R1', x: 16000, count: 2 },
+  { id: 'camp-R2', x: 18200, count: 3 },
+];
+
+// Ruin repair (repairable abandoned structures per D-18)
+export const RUIN_REPAIR_COST = 4;
+export const RUIN_HP = 40;
+export const COLOR_RUIN = 0x555555;
+export const RUIN_WIDTH = 40;
+export const RUIN_HEIGHT = 36;
