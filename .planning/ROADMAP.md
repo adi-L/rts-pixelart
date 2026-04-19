@@ -82,7 +82,7 @@ Plans:
 **Plans**: 3 plans
 Plans:
 - [x] 04-01-PLAN.md -- Bullet entity, Gunner NPC, Armory structure, all Phase 4 constants, world expansion to 20,000px
-- [ ] 04-02-PLAN.md -- Hero combat (gun sprite, HP, mouse aim, shooting, ammo), HUD health bar + ammo, zombie knockback
+- [x] 04-02-PLAN.md -- Hero combat (gun sprite, HP, mouse aim, shooting, ammo), HUD health bar + ammo, zombie knockback
 - [ ] 04-03-PLAN.md -- Game.ts full integration, system updates (NPCManager, StructureManager), exploration zones, visual checkpoint
 
 ## Progress
