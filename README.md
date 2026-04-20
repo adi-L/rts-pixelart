@@ -1,151 +1,72 @@
-# Phaser Vite TypeScript Template
+# Dead City
 
-This is a Phaser 3 project template that uses Vite for bundling. It supports hot-reloading for quick development workflow, includes TypeScript support and scripts to generate production-ready builds.
+An open-source 2D side-scrolling survival strategy game inspired by Kingdom Two Crowns, set in a futuristic zombie world. Built with Phaser 3, TypeScript, and Vite.
 
-**[This Template is also available as a JavaScript version.](https://github.com/phaserjs/template-vite)**
+## About
 
-### Versions
+You control a lone hero navigating a post-apocalyptic city overrun by zombies. Move left and right, collect coins, and drop them to build defenses, recruit citizens, and survive increasingly dangerous nightly zombie waves.
 
-This template has been updated for:
+There are no menus, no direct unit control. Your only tools are **movement** and **coins**. Citizens and builders act autonomously — you just need to be in the right place at the right time.
 
-- [Phaser 3.87.0](https://github.com/phaserjs/phaser)
-- [Vite 5.3.1](https://github.com/vitejs/vite)
-- [TypeScript 5.4.5](https://github.com/microsoft/TypeScript)
+## Features
 
-![screenshot](screenshot.png)
+- **Coin-drop economy** — build structures and recruit NPCs by dropping coins at key locations
+- **Autonomous NPCs** — citizens, builders, and farmers operate on their own AI
+- **Day/night cycle** — gather resources by day, survive zombie waves by night
+- **Defensive structures** — walls, towers, and farms to protect and sustain your city
+- **Wave-based combat** — progressively harder zombie waves each night
 
-## Requirements
+## Getting Started
+
+### Requirements
 
 [Node.js](https://nodejs.org) is required to install dependencies and run scripts via `npm`.
 
-## Available Commands
-
-| Command | Description |
-|---------|-------------|
-| `npm install` | Install project dependencies |
-| `npm run dev` | Launch a development web server |
-| `npm run build` | Create a production build in the `dist` folder |
-| `npm run dev-nolog` | Launch a development web server without sending anonymous data (see "About log.js" below) |
-| `npm run build-nolog` | Create a production build in the `dist` folder without sending anonymous data (see "About log.js" below) |
-
-## Writing Code
-
-After cloning the repo, run `npm install` from your project directory. Then, you can start the local development server by running `npm run dev`.
-
-The local development server runs on `http://localhost:8080` by default. Please see the Vite documentation if you wish to change this, or add SSL support.
-
-Once the server is running you can edit any of the files in the `src` folder. Vite will automatically recompile your code and then reload the browser.
-
-## Template Project Structure
-
-We have provided a default project structure to get you started. This is as follows:
-
-- `index.html` - A basic HTML page to contain the game.
-- `src` - Contains the game source code.
-- `src/main.ts` - The main **entry** point. This contains the game configuration and starts the game.
-- `src/vite-env.d.ts` - Global TypeScript declarations, provide types information.
-- `src/scenes/` - The Phaser Scenes are in this folder.
-- `public/style.css` - Some simple CSS rules to help with page layout.
-- `public/assets` - Contains the static assets used by the game.
-
-## Handling Assets
-
-Vite supports loading assets via JavaScript module `import` statements.
-
-This template provides support for both embedding assets and also loading them from a static folder. To embed an asset, you can import it at the top of the JavaScript file you are using it in:
-
-```js
-import logoImg from './assets/logo.png'
-```
-
-To load static files such as audio files, videos, etc place them into the `public/assets` folder. Then you can use this path in the Loader calls within Phaser:
-
-```js
-preload ()
-{
-    //  This is an example of an imported bundled image.
-    //  Remember to import it at the top of this file
-    this.load.image('logo', logoImg);
-
-    //  This is an example of loading a static image
-    //  from the public/assets folder:
-    this.load.image('background', 'assets/bg.png');
-}
-```
-
-When you issue the `npm run build` command, all static assets are automatically copied to the `dist/assets` folder.
-
-## Deploying to Production
-
-After you run the `npm run build` command, your code will be built into a single bundle and saved to the `dist` folder, along with any other assets your project imported, or stored in the public assets folder.
-
-In order to deploy your game, you will need to upload *all* of the contents of the `dist` folder to a public facing web server.
-
-## Customizing the Template
-
-### Vite
-
-If you want to customize your build, such as adding plugin (i.e. for loading CSS or fonts), you can modify the `vite/config.*.mjs` file for cross-project changes, or you can modify and/or create new configuration files and target them in specific npm tasks inside of `package.json`. Please see the [Vite documentation](https://vitejs.dev/) for more information.
-
-## About log.js
-
-If you inspect our node scripts you will see there is a file called `log.js`. This file makes a single silent API call to a domain called `gryzor.co`. This domain is owned by Phaser Studio Inc. The domain name is a homage to one of our favorite retro games.
-
-We send the following 3 pieces of data to this API: The name of the template being used (vue, react, etc). If the build was 'dev' or 'prod' and finally the version of Phaser being used.
-
-At no point is any personal data collected or sent. We don't know about your project files, device, browser or anything else. Feel free to inspect the `log.js` file to confirm this.
-
-Why do we do this? Because being open source means we have no visible metrics about which of our templates are being used. We work hard to maintain a large and diverse set of templates for Phaser developers and this is our small anonymous way to determine if that work is actually paying off, or not. In short, it helps us ensure we're building the tools for you.
-
-However, if you don't want to send any data, you can use these commands instead:
-
-Dev:
+### Installation
 
 ```bash
-npm run dev-nolog
+npm install
 ```
 
-Build:
+### Running
 
 ```bash
-npm run build-nolog
+npm run dev
 ```
 
-Or, to disable the log entirely, simply delete the file `log.js` and remove the call to it in the `scripts` section of `package.json`:
+The dev server runs on `http://localhost:8080` by default with hot-reloading enabled.
 
-Before:
+### Building for Production
 
-```json
-"scripts": {
-    "dev": "node log.js dev & dev-template-script",
-    "build": "node log.js build & build-template-script"
-},
+```bash
+npm run build
 ```
 
-After:
+Output goes to the `dist` folder. Upload its contents to any static web server to deploy.
 
-```json
-"scripts": {
-    "dev": "dev-template-script",
-    "build": "build-template-script"
-},
+## Project Structure
+
+```
+src/
+├── main.ts              # Entry point and game configuration
+├── constants.ts         # Game-wide constants
+├── scenes/              # Phaser scenes
+├── entities/            # Game entities (hero, NPCs, structures, enemies)
+├── systems/             # Game systems (waves, economy, day-night cycle)
+├── ui/                  # HUD and UI elements
+└── events/              # Event definitions
 ```
 
-Either of these will stop `log.js` from running. If you do decide to do this, please could you at least join our Discord and tell us which template you're using! Or send us a quick email. Either will be super-helpful, thank you.
+## Tech Stack
 
-## Join the Phaser Community!
+- **[Phaser 3](https://phaser.io/)** — game engine
+- **[TypeScript](https://www.typescriptlang.org/)** — type safety
+- **[Vite](https://vitejs.dev/)** — dev server and bundler
 
-We love to see what developers like you create with Phaser! It really motivates us to keep improving. So please join our community and show-off your work 😄
+## Contributing
 
-**Visit:** The [Phaser website](https://phaser.io) and follow on [Phaser Twitter](https://twitter.com/phaser_)<br />
-**Play:** Some of the amazing games [#madewithphaser](https://twitter.com/search?q=%23madewithphaser&src=typed_query&f=live)<br />
-**Learn:** [API Docs](https://newdocs.phaser.io), [Support Forum](https://phaser.discourse.group/) and [StackOverflow](https://stackoverflow.com/questions/tagged/phaser-framework)<br />
-**Discord:** Join us on [Discord](https://discord.gg/phaser)<br />
-**Code:** 2000+ [Examples](https://labs.phaser.io)<br />
-**Read:** The [Phaser World](https://phaser.io/community/newsletter) Newsletter<br />
+This is an open-source project. Contributions, ideas, and bug reports are welcome. Feel free to open issues or submit pull requests.
 
-Created by [Phaser Studio](mailto:support@phaser.io). Powered by coffee, anime, pixels and love.
+## License
 
-The Phaser logo and characters are &copy; 2011 - 2024 Phaser Studio Inc.
-
-All rights reserved.
+This project is open source under the [MIT License](LICENSE).
